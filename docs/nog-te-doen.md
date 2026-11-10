@@ -28,7 +28,11 @@
 - [x] Vragenlijst invullen (online: https://claude.ai/artifact/A86EJu1AXwbLrWdHLSGx6w, bron `vragenlijst/vragenlijst.html`).
 - [x] Voorbeeldrapporten bekeken (5 stuks). Vaste opbouw: 1.0 Gegevens, 2.0 Diversiteit (2.1–2.6),
   3.0 Hoeveelheden. Wat opvalt: halflege bladen, afgebroken blokken, lege koppen, foutjes in vaste teksten.
-- [ ] Opmaakvoorstellen laten kiezen.
+- [ ] Opmaakvoorbeeld laten kiezen: `voorbeeld/opmaakvoorbeeld.html`, variant A/B/C voor het constateringsblok.
+- Per constatering in woorden: Constatering · Uitgangspunt (opgenomen / aanname / niet opgenomen) ·
+  Gevolgen voor de uitvoering (geen / kleine kans / mogelijk, afstemmen). Bij "mogelijk" komt de NOTE vanzelf.
+- [ ] Vaste teksten (2.0 en 3.1–3.3) zijn in het voorbeeld taalkundig opgeschoond. Chris laten nakijken.
+- [ ] Standaardzinnen per onderdeel: proberen (prompt om oude rapporten lokaal uit te lezen).
 
 ## Daarna: automatiseren (pas als de opmaak af is)
 - (nog leeg)
