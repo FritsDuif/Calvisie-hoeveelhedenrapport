@@ -28,7 +28,11 @@
 - [x] Vragenlijst invullen (online: https://claude.ai/artifact/A86EJu1AXwbLrWdHLSGx6w, bron `vragenlijst/vragenlijst.html`).
 - [x] Voorbeeldrapporten bekeken (5 stuks). Vaste opbouw: 1.0 Gegevens, 2.0 Diversiteit (2.1–2.6),
   3.0 Hoeveelheden. Wat opvalt: halflege bladen, afgebroken blokken, lege koppen, foutjes in vaste teksten.
-- [ ] Opmaakvoorbeeld laten kiezen: `voorbeeld/opmaakvoorbeeld.html`, variant A/B/C voor het constateringsblok.
+- [x] Opmaakvoorbeeld gekozen: **variant A** (foto's naast de tekst, balk met uitgangspunt en gevolg).
+- [x] Eerste versie rapportbouwer: `rapportbuilder/` (online: https://claude.ai/artifact/2FHd4pDZPVwzJmP8MruvtZ,
+  maken met `python3 rapportbuilder/tools/maak-online-versie.py online/rapportbouwer-hoeveelheden.html`).
+- [ ] Chris laat opmerkingen achter in de online versie.
+- [ ] PDF maken in de online versie nog niet getest in de Claude-app zelf.
 - Per constatering in woorden: Constatering · Uitgangspunt (opgenomen / aanname / niet opgenomen) ·
   Gevolgen voor de uitvoering (geen / kleine kans / mogelijk, afstemmen). Bij "mogelijk" komt de NOTE vanzelf.
 - [ ] Vaste teksten (2.0 en 3.1–3.3) zijn in het voorbeeld taalkundig opgeschoond. Chris laten nakijken.

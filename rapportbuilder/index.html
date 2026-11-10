@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapportbouwer hoeveelheden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Werkbank links (formulier), papier rechts (A4 staand). Huiskleuren Calvisie: navy + blauw.
+   Opmaak en werking overgenomen van de houtrot-rapportbouwer. */
+:root{
+  --blue:#2d63ad; --navy:#0e3a6c;
+  --ui-bg:#eceef2; --ui-panel:#ffffff; --ui-field:#ffffff; --ui-sunk:#f6f7f9; --ui-soft:#eaf1fb; --ui-softline:#c9d7ec;
+  --ui-text:#1f2733; --ui-text2:#3a4352; --ui-muted:#667085; --ui-border:#d7dbe2; --ui-accent:#2d63ad; --ui-accent-h:#244f8c; --ui-onaccent:#ffffff;
+  --ui-bar:#0e3a6c; --ui-onbar:#ffffff;
+  --ok:#1f7a4d; --ok-bg:#e8f5ee; --warn:#8a5300; --warn-bg:#fff3e0; --bad:#b42318; --bad-bg:#fdecea;
+  --shadow:0 2px 12px rgba(15,30,60,.14);
+  --font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --ui-bg:#11161d; --ui-panel:#18202a; --ui-field:#0f151c; --ui-sunk:#141b23; --ui-soft:#1b2a3f; --ui-softline:#2c4466;
+  --ui-text:#e6ebf2; --ui-text2:#c5ced9; --ui-muted:#93a0b1; --ui-border:#2c3644; --ui-accent:#6f9fe0; --ui-accent-h:#8bb3ea; --ui-onaccent:#0b1420;
+  --ui-bar:#0a2343; --ui-onbar:#e6ebf2;
+  --ok:#6fd3a0; --ok-bg:#12291f; --warn:#f0b35a; --warn-bg:#2b2114; --bad:#ff8a7a; --bad-bg:#2e1715;
+  --shadow:0 2px 14px rgba(0,0,0,.5); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --ui-bg:#11161d; --ui-panel:#18202a; --ui-field:#0f151c; --ui-sunk:#141b23; --ui-soft:#1b2a3f; --ui-softline:#2c4466;
+  --ui-text:#e6ebf2; --ui-text2:#c5ced9; --ui-muted:#93a0b1; --ui-border:#2c3644; --ui-accent:#6f9fe0; --ui-accent-h:#8bb3ea; --ui-onaccent:#0b1420;
+  --ui-bar:#0a2343; --ui-onbar:#e6ebf2;
+  --ok:#6fd3a0; --ok-bg:#12291f; --warn:#f0b35a; --warn-bg:#2b2114; --bad:#ff8a7a; --bad-bg:#2e1715;
+  --shadow:0 2px 14px rgba(0,0,0,.5); color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);color:var(--ui-text);background:var(--ui-bg)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ui-accent);outline-offset:1px}
+
+/* ---------- balk ---------- */
+.topbar{height:52px;display:flex;align-items:center;gap:8px;padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--ui-bar);color:var(--ui-onbar)}
+.topbar .brand{font-weight:700;letter-spacing:.08em;font-size:14px;margin-right:auto;white-space:nowrap}
+.topbar .brand small{font-weight:400;letter-spacing:0;opacity:.7;margin-left:8px}
+.topbar button{font-size:13px;border:1px solid color-mix(in srgb,var(--ui-onbar) 35%,transparent);background:transparent;color:var(--ui-onbar);border-radius:6px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+.topbar button:hover{background:color-mix(in srgb,var(--ui-onbar) 12%,transparent)}
+.topbar button:disabled{opacity:.4;cursor:default}
+.topbar button.primary{background:var(--ui-onbar);color:var(--ui-bar);font-weight:600}
+.topbar .proef{font-size:11px;border:1px solid color-mix(in srgb,var(--ui-onbar) 45%,transparent);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.status{font-size:12px;display:flex;align-items:center;gap:8px;min-width:0;opacity:.85}
+.status span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px}
+
+/* ---------- indeling ---------- */
+.app{display:flex;height:calc(100% - 52px)}
+.editor{width:520px;min-width:400px;background:var(--ui-panel);border-right:1px solid var(--ui-border);display:flex;flex-direction:column}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;padding:10px 12px;border-bottom:1px solid var(--ui-border)}
+.tabs button{font-size:12.5px;border:1px solid var(--ui-border);background:var(--ui-field);border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--ui-text2)}
+.tabs button.on{background:var(--ui-accent);border-color:var(--ui-accent);color:var(--ui-onaccent)}
+.tabs .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--warn);margin-left:5px;vertical-align:middle}
+#form{flex:1;overflow:auto;padding:14px 16px 90px}
+.preview{flex:1;overflow:auto;padding:24px}
+#pages{width:210mm;margin:0 auto}
+
+/* ---------- formulier ---------- */
+.sec-title{font-size:15px;font-weight:700;margin:2px 0 2px}
+.hint{font-size:12px;color:var(--ui-muted);margin:0 0 12px;line-height:1.5}
+.f{display:block;margin-bottom:10px}
+.f>span,.lbl{display:block;font-size:12px;font-weight:600;color:var(--ui-text2);margin-bottom:4px}
+input[type=text],input[type=number],input[type=date],textarea,select{width:100%;font:inherit;font-size:13px;border:1px solid var(--ui-border);border-radius:6px;padding:6px 8px;background:var(--ui-field);color:var(--ui-text)}
+textarea{resize:vertical;line-height:1.45}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--ui-softline);border-color:var(--ui-accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 10px}
+.ctl{display:flex;gap:2px;flex:none}
+.ctl button,.mini{font-size:12px;border:1px solid var(--ui-border);background:var(--ui-field);border-radius:5px;min-width:26px;height:28px;cursor:pointer;color:var(--ui-text2);padding:0 6px}
+.ctl button:hover,.mini:hover{background:var(--ui-sunk)}
+.ctl button:disabled{opacity:.35;cursor:default}
+.add,.btn{font-size:12.5px;border:1px dashed var(--ui-softline);background:var(--ui-soft);color:var(--ui-accent);border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:600}
+.add:hover,.btn:hover{border-color:var(--ui-accent)}
+.btn.solid{border:1px solid var(--ui-accent);background:var(--ui-accent);color:var(--ui-onaccent)}
+.btn.solid:hover{background:var(--ui-accent-h)}
+.btn:disabled{opacity:.45;cursor:default}
+.photo-in{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px}
+.photo-in img{width:64px;height:46px;object-fit:cover;border-radius:4px;border:1px solid var(--ui-border);background:#fff}
+.photo-in .leeg{width:64px;height:46px;border-radius:4px;border:1px dashed var(--ui-border);background:var(--ui-sunk)}
+.photo-in label{cursor:pointer;color:var(--ui-accent);font-weight:600}
+.photo-in input{display:none}
+.photo-in button{border:0;background:none;color:var(--ui-muted);cursor:pointer;font-size:12px;padding:0}
+.panel{border:1px solid var(--ui-softline);background:var(--ui-soft);border-radius:12px;padding:12px;margin-bottom:14px}
+.panel .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.vraag{font-size:13px;font-weight:600;margin:4px 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.chip{font-size:12px;border:1px solid var(--ui-border);background:var(--ui-field);border-radius:999px;padding:4px 10px;cursor:pointer;color:var(--ui-text2);text-align:left;line-height:1.3}
+.chip:hover{border-color:var(--ui-accent);color:var(--ui-accent)}
+.chip.on{background:var(--ui-accent);border-color:var(--ui-accent);color:var(--ui-onaccent)}
+.chip.ghost{border-style:dashed;color:var(--ui-muted)}
+.seg{display:flex;border:1px solid var(--ui-border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.seg button{flex:1;border:0;border-right:1px solid var(--ui-border);background:var(--ui-field);padding:7px 4px;font-size:12.5px;cursor:pointer;color:var(--ui-text2)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ui-accent);color:var(--ui-onaccent);font-weight:600}
+.seg.kort{max-width:220px}
+.kaart{border:1px solid var(--ui-border);border-radius:10px;background:var(--ui-field);margin:0 0 10px}
+.kaart.actief{border-color:var(--ui-accent);box-shadow:0 0 0 3px var(--ui-soft)}
+.kaart.verborgen{opacity:.55}
+.kaart-h{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 10px;cursor:pointer}
+.kaart-h .nr{font-weight:700;color:var(--ui-accent);font-variant-numeric:tabular-nums;flex:none}
+.kaart-h .t{flex:1;min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kaart-h .t small{font-weight:400;color:var(--ui-muted)}
+.kaart-b{padding:8px 10px 4px;border-top:1px dashed var(--ui-border)}
+.tag{display:inline-block;font-size:10.5px;border-radius:4px;padding:0 5px;background:var(--ui-sunk);border:1px solid var(--ui-border);color:var(--ui-muted);margin-left:4px}
+.check{display:flex;gap:8px;font-size:12.5px;padding:7px 9px;border-radius:8px;margin-bottom:6px;line-height:1.4}
+.check.ok{background:var(--ok-bg);color:var(--ok)} .check.warn{background:var(--warn-bg);color:var(--warn)}
+.check button{margin-left:auto;border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px}
+.glasrij{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.zinrij{border:1px solid var(--ui-border);border-radius:8px;padding:8px;margin-bottom:8px;background:var(--ui-field)}
+.zinrij.verborgen{opacity:.55}
+.zinrij .boven{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.zinrij .boven input{flex:1}
+hr.sc{border:0;border-top:1px solid var(--ui-border);margin:16px 0}
+
+/* ---------- rapportbladen: A4 staand, altijd wit papier ---------- */
+.page{width:210mm;height:297mm;background:#fff;position:relative;overflow:hidden;margin:0 0 8mm;box-shadow:var(--shadow);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:var(--font);font-size:8.8pt;line-height:1.5;color:#222;color-scheme:light}
+.page .deco{position:absolute;inset:0;pointer-events:none}
+.page .frame{position:absolute;inset:6mm;border:.25mm solid #2b2b2b;pointer-events:none}
+.page .body{position:absolute;top:17mm;left:18mm;right:18mm;bottom:22mm}
+.page .col{height:100%;overflow:hidden;position:relative}
+.page .foot{position:absolute;left:18mm;right:18mm;bottom:11mm;display:flex;justify-content:space-between;align-items:center;font-size:7.4pt;color:#8a8f98;letter-spacing:.02em;border-top:.2mm solid #e3e6ea;padding-top:2mm}
+.page .foot b{color:var(--blue);font-weight:600}
+.page [data-ga]{cursor:pointer;border-radius:1mm}
+.page [data-ga]:hover{background:rgba(45,99,173,.06)}
+
+.r-h1{display:inline-block;font-size:13pt;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin:0 0 4.2mm;padding-bottom:1.8mm;border-bottom:.9mm solid var(--blue);color:#111}
+.r-h2{font-weight:700;font-size:10pt;margin:5mm 0 1.6mm;color:#111;display:flex;gap:2.5mm;align-items:baseline}
+.r-h2 .nr{color:var(--blue);font-variant-numeric:tabular-nums}
+.r-h1 + .r-h2{margin-top:0}
+.r-h3{font-weight:700;font-size:7.6pt;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin:2.6mm 0 1mm}
+.r-p{margin:0 0 2mm;white-space:pre-wrap}
+.r-geen{margin:0 0 2mm;color:#444;display:flex;gap:2mm;align-items:center}
+.r-geen::before{content:"";width:1.4mm;height:1.4mm;border-radius:50%;background:#9aa3ad;flex:none}
+.r-li{display:flex;gap:2.4mm;margin:0 0 1mm}
+.r-li:before{content:"";flex:none;width:1.4mm;height:1.4mm;border-radius:50%;background:var(--blue);margin-top:1.75mm}
+.r-ol{margin:0 0 2mm;padding-left:5mm}
+.r-ol li{margin:0 0 1mm;padding-left:1mm}
+.r-ol li::marker{color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums}
+.r-info{display:grid;grid-template-columns:38mm 1fr 38mm 1fr;border-top:.2mm solid #d8dce2;margin:1mm 0 2mm}
+.r-info>div{padding:1.6mm 2mm 1.6mm 0;border-bottom:.2mm solid #d8dce2}
+.r-info>div:nth-child(odd){font-weight:600;color:#111}
+.r-info.een{grid-template-columns:38mm 1fr}
+.r-cx{display:grid;border-top:.2mm solid #d8dce2;margin:1mm 0 3mm;align-items:center}
+.r-cx>div{padding:1.4mm 2mm 1.4mm 0;border-bottom:.2mm solid #d8dce2;min-height:5mm}
+.r-cx>.h{font-size:7.2pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);border-bottom:.35mm solid var(--blue)}
+.r-cx .duim{width:22mm;height:14mm;padding:0;margin:1mm 0}
+.r-kader{border:.35mm solid var(--blue);border-left-width:1.2mm;border-radius:1.2mm;padding:2.6mm 3.8mm 1.2mm;margin:1mm 0 3mm;background:#f4f8fd}
+.r-kader .t{font-weight:700;color:var(--navy);margin:0 0 1.2mm}
+.r-twee{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin:1mm 0 3mm}
+.r-twee figure{margin:0}
+.r-twee .im{height:58mm}
+.fig-cap{font-size:7.4pt;color:#555;margin-top:1.2mm}
+.r-toc{display:grid;grid-template-columns:12mm 1fr auto;border-top:.2mm solid #d8dce2;margin:0 0 4mm}
+.r-toc>div{padding:1.7mm 0;border-bottom:.2mm solid #d8dce2}
+.r-toc .n{color:var(--blue);font-weight:700;font-variant-numeric:tabular-nums}
+.r-toc .p{text-align:right;font-variant-numeric:tabular-nums;color:#555}
+.r-toc .hoofd{font-weight:700;color:#111}
+.r-bijl{display:flex;flex-wrap:wrap;gap:2mm 5mm;margin:1mm 0 3mm}
+.r-bijl span{display:flex;gap:1.6mm;align-items:center}
+.r-bijl span::before{content:"✓";display:inline-flex;align-items:center;justify-content:center;width:3.2mm;height:3.2mm;border-radius:.6mm;background:var(--blue);color:#fff;font-size:6.5pt;font-weight:700}
+.im{background:#eef1f5;border:.2mm solid #d8dce2;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;color:#9aa3ad;font-size:7.6pt}
+.im img{width:100%;height:100%;object-fit:cover;display:block}
+.r-var{background:#fff1b8;color:#7a5200;border-radius:.6mm;padding:0 .6mm}
+.st{display:inline-flex;align-items:center;gap:1.6mm;font-weight:600;color:#1d2a38}
+.st::before{content:"";width:2.2mm;height:2.2mm;border-radius:50%;background:var(--c,#9aa3ad);flex:none}
+.st.ja{--c:#2f8a4e}.st.aanname{--c:#d08a1a}.st.nee{--c:#8a95a3}
+.st.geen{--c:#2f8a4e}.st.klein{--c:#d08a1a}.st.groot{--c:#c4372b}
+/* constatering (variant A): tekst met twee foto's, balk met uitgangspunt en gevolg */
+.cA{margin:0 0 5mm}
+.cA .kop{font-weight:700;color:#111;margin:0 0 1.4mm;display:flex;gap:2.4mm}
+.cA .kop .nr{color:var(--blue);font-variant-numeric:tabular-nums}
+.cA .rij{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm}
+.cA .rij .im{height:40mm}
+.cA .rij .x{white-space:pre-wrap}
+.cA .lbl{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--blue);margin-bottom:.8mm}
+.cA .balk{display:grid;grid-template-columns:1fr 1fr;margin-top:2.4mm;border-top:.35mm solid var(--blue);background:#f4f8fd}
+.cA .balk>div{padding:1.8mm 3mm}
+.cA .balk>div+div{border-left:.2mm solid #d8dce2}
+.note{margin-top:2.4mm;border:.35mm solid #c4372b;border-left-width:1.2mm;border-radius:1.2mm;background:#fdf3f2;padding:2mm 3.4mm;white-space:pre-wrap}
+.note b{color:#9d2a20}
+
+/* voorblad: donkerblauw vlak met de foto er half overheen */
+.cover::before{content:"";position:absolute;left:0;right:0;top:0;height:150mm;background:var(--navy)}
+.cover .cv-kicker{position:absolute;left:18mm;right:18mm;top:30mm;font-size:9pt;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#9cc1f2}
+.cover .cv-title{position:absolute;left:18mm;right:18mm;top:39mm;margin:0;font-size:40pt;font-weight:800;letter-spacing:-.025em;line-height:1.05;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cover .cv-title.lang{font-size:28pt;top:41mm}
+.cover .cv-title.zeerlang{font-size:21pt;top:40mm;white-space:normal;max-height:48mm}
+.cover .cv-sub{position:absolute;left:18mm;right:18mm;top:62mm;font-size:17pt;font-weight:500;color:#c9dcf5}
+.cover .cv-title.zeerlang + .cv-sub{top:66mm}
+.cover .cv-photo{position:absolute;left:18mm;right:18mm;top:92mm;height:118mm;border:2mm solid #fff;box-shadow:0 2mm 8mm rgba(10,30,60,.25);overflow:hidden;background:#e6ebf1;display:flex;align-items:center;justify-content:center;color:#8794a3;font-size:10pt}
+.cover .cv-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.cover .cv-meta{position:absolute;left:18mm;right:74mm;bottom:20mm;margin:0;display:grid;grid-template-columns:repeat(3,auto);gap:5mm 8mm;font-size:8.8pt}
+.cover .cv-meta dt{font-size:6.8pt;text-transform:uppercase;letter-spacing:.11em;color:#7b8794;margin-bottom:.8mm}
+.cover .cv-meta dd{margin:0;font-weight:700}
+.cover .cv-logo{position:absolute;right:18mm;bottom:18mm;height:25mm;display:block}
+.overflow{outline:1.2mm dashed #e74c3c;outline-offset:-1mm}
+
+@media (max-width:900px){
+  .app{flex-direction:column;height:auto}
+  .editor{width:100%;min-width:0;border-right:0;border-bottom:1px solid var(--ui-border)}
+  .preview{padding:16px}
+  .topbar{overflow-x:auto}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+@page{size:A4 portrait;margin:0}
+@media print{
+  html,body{height:auto;background:#fff}
+  .topbar,.editor{display:none!important}
+  .app{display:block;height:auto}
+  .preview{padding:0;overflow:visible}
+  #pages{zoom:1!important;width:auto;margin:0}
+  .page{margin:0;box-shadow:none;break-after:page;page-break-after:always}
+  .page:last-child{break-after:auto;page-break-after:auto}
+  .page [data-ga]:hover{background:none}
+  .r-var{background:none;color:inherit}
+  .overflow{outline:none}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">RAPPORTBOUWER HOEVEELHEDEN<small>Calvisie</small></div>
+  <div class="status" id="status"></div>
+  <span class="proef" id="proef" hidden title="Opslaan en PDF maken zijn in deze weergave niet beschikbaar">Alleen bekijken</span>
+  <button id="btnUndo" title="Laatste wijziging ongedaan maken (Ctrl+Z)" disabled>Ongedaan maken</button>
+  <button id="btnNew" title="Nieuw rapport">Nieuw</button>
+  <button id="btnOpen" title="Open een rapportbestand (.json) uit de projectmap">Openen</button>
+  <button id="btnSave" title="Bewaar het rapportbestand in de projectmap (Ctrl+S)">Opslaan</button>
+  <button id="btnPrint" class="primary" title="Bladen als PDF bewaren (A4 staand)">PDF maken</button>
+</header>
+<div class="app">
+  <aside class="editor"><nav class="tabs" id="tabs"></nav><div id="form"></div></aside>
+  <main class="preview" id="preview"><div id="pages"></div></main>
+</div>
+<input type="file" id="fileOpen" accept=".json,application/json" hidden>
+
+<script src="lijsten.js"></script>
+<script>
+"use strict";
+const IN_FRAME = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+const STORE_KEY = 'calvisie-hoeveelheden-v1';
+const LIST_KEY = 'calvisie-hoeveelheden-lijsten-v1';
+const VERSIE = 1;
+const LOGO = 'assets/logo-calvisie.png';
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
+};
+const newId = () => Math.random().toString(36).slice(2, 9);
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const opsom = a => a.length<=1 ? a.join('') : a.slice(0,-1).join(', ')+' en '+a[a.length-1];
+const klein = s => s ? s.charAt(0).toLowerCase()+s.slice(1) : '';
+function fmtShort(d){ if(!d) return ''; const [y,m,dd]=String(d).split('-'); return y&&m&&dd?`${dd}-${m}-${y}`:d; }
+
+/* ---------- keuzelijsten (aan te passen in het programma) ---------- */
+const DEFAULT_LIJSTEN = clone(window.LIJSTEN);
+let LST = (()=>{ try{ const t=store.get(LIST_KEY); return t?{...clone(DEFAULT_LIJSTEN), ...JSON.parse(t)}:clone(DEFAULT_LIJSTEN); }catch(e){ return clone(DEFAULT_LIJSTEN); } })();
+const bewaarLijsten = () => store.set(LIST_KEY, JSON.stringify(LST));
+const OND = () => LST.ONDERDELEN;
+const ondDef = id => OND().find(o=>o.id===id);
+
+/* ---------- het rapport ---------- */
+const leegItem = (extra={}) => ({id:newId(), titel:'', tekst:'', op:'', gv:'', letop:'', fotos:['',''], verborgen:false, ...extra});
+const leegGlas = () => ({id:newId(), soort:'', fabrikant:'', jaartal:'', ruimte:'', grillig:'', foto:'', verborgen:false});
+function nieuwRapport(){
+  const ond = {}; DEFAULT_LIJSTEN.ONDERDELEN.forEach(o=>ond[o.id]={eerst:'', afwijkend:'', items:[], glas:[]});
+  return { versie:VERSIE,
+    project:{complex:'', plaats:'', referentie:'', opdrachtgever:'', vgo:'', inspecteur:'', schouw:'', opgesteld:new Date().toISOString().slice(0,10),
+      type:'', vhe:'', lagen:'', algRuimte:'', opmerking:'', coverfoto:'', situatie:'', projectfoto:''},
+    diensten:{lijst:['Hoeveelheden'], niveau:'', opname:[], steekproef:'', visualisatie:[]},
+    onderdelen: ond,
+    opmerkingen:'', bijlagen:clone(DEFAULT_LIJSTEN.BIJLAGEN) };
+}
+function voorbeeldRapport(){
+  const r = nieuwRapport();
+  Object.assign(r.project, {complex:'De Voorbeeldhof', plaats:'Testdorp', referentie:'99001', opdrachtgever:'Woonstichting Voorbeeld', vgo:'Schildersbedrijf Proef',
+    inspecteur:'Dhr. J. Voorbeeld', schouw:'2026-11-02', opgesteld:'2026-11-05', type:'Eengezinswoningen', vhe:'24', lagen:'3', algRuimte:'Niet aanwezig'});
+  Object.assign(r.diensten, {lijst:['Hoeveelheden','Houtrot','Visualisatie'], niveau:'3 Scenario', opname:['Buiten','Beglazing'], steekproef:'20%', visualisatie:['Autocad']});
+  const z = (id,i,extra) => { const s=LST.ZINNEN[id][i]; return leegItem({titel:s[0], tekst:s[1], op:s[2], gv:s[3], ...extra}); };
+  const o = r.onderdelen;
+  o.elementen.afwijkend='ja'; o.elementen.items=[z('elementen',1)];
+  o.beglazing.eerst='ja'; o.beglazing.afwijkend='ja';
+  o.beglazing.glas=[{...leegGlas(), soort:'HR++-beglazing', fabrikant:'Voorbeeldglas', jaartal:'2008', ruimte:'Woon- en slaapvertrekken', grillig:'Nee'},
+                    {...leegGlas(), soort:'Draadglas', ruimte:'Bergingen', grillig:'Nee'}];
+  o.beglazing.items=[z('beglazing',0)];
+  o.zav.afwijkend='ja'; o.zav.items=[z('zav',0), z('zav',1)];
+  o.behandelingen.afwijkend='nee';
+  o.daken.eerst='nee';
+  o.erf.eerst='ja'; o.erf.afwijkend='ja'; o.erf.items=[z('erf',0), z('erf',1)];
+  r.opmerkingen='Twee woningen waren tijdens de schouw niet toegankelijk. Voor deze woningen hebben wij het basispatroon aangehouden.';
+  r.voorbeeld=true;
+  return r;
+}
+/* oudere rapportbestanden aanvullen met wat later is toegevoegd, zodat er geen werk verloren gaat */
+function migreer(r){
+  const basis = nieuwRapport();
+  const vul = (doel, bron) => { for(const k in bron){ if(doel[k]===undefined) doel[k]=clone(bron[k]); else if(bron[k] && typeof bron[k]==='object' && !Array.isArray(bron[k]) && typeof doel[k]==='object') vul(doel[k], bron[k]); } };
+  vul(r, basis);
+  for(const id in r.onderdelen) r.onderdelen[id].items.forEach(it=>vul(it, leegItem()));
+  r.versie = VERSIE; return r;
+}
+let S = (()=>{ try{ const t=store.get(STORE_KEY); const r=t&&JSON.parse(t); return r&&r.onderdelen?migreer(r):null; }catch(e){ return null; } })() || voorbeeldRapport();
+
+let fileHandle=null;
+const HIST=[];
+let UI = {tab: store.get(STORE_KEY+'-tab') || 'project', open:null, nieuw:false};
+let saveTimer=null;
+function autosave(){ clearTimeout(saveTimer); saveTimer=setTimeout(()=>{ if(!store.set(STORE_KEY, JSON.stringify(S))) setStatus('Te groot om tussentijds te bewaren. Gebruik Opslaan.'); },400); }
+function setStatus(t){ document.getElementById('status').innerHTML = `<span>${esc(t||'')}</span>`; }
+function onthoud(){ const j=JSON.stringify(S); if(HIST[HIST.length-1]!==j){ HIST.push(j); if(HIST.length>30) HIST.shift(); } document.getElementById('btnUndo').disabled=false; }
+function ongedaan(){
+  const nu=JSON.stringify(S); let j;
+  do{ j=HIST.pop(); }while(j!==undefined && j===nu);
+  document.getElementById('btnUndo').disabled=!HIST.length;
+  if(j===undefined){ setStatus('Er is niets om ongedaan te maken'); return; }
+  S=JSON.parse(j); changed(true); setStatus('Ongedaan gemaakt');
+}
+function getP(path){ return path.split('.').reduce((o,k)=>o==null?o:o[k], S); }
+function setP(path, val){ const ks=path.split('.'); const last=ks.pop(); ks.reduce((o,k)=>(o[k]==null?(o[k]={}):o[k]), S)[last]=val; }
+
+/* ---------- nog in te vullen ---------- */
+function openPunten(){
+  const p=S.project, uit=[];
+  [['complex','Projectnaam'],['plaats','Plaats'],['referentie','Referentie'],['opdrachtgever','Opdrachtgever'],['inspecteur','Inspecteur'],['schouw','Datum schouw']]
+    .forEach(([k,l])=>{ if(!p[k]) uit.push({tab:'project', t:l+' is nog leeg'}); });
+  for(const o of OND()){
+    const d=S.onderdelen[o.id];
+    if(o.eerst && !d.eerst){ uit.push({tab:'o:'+o.id, t:`${o.nr} ${o.kort||o.titel}: ${o.eerst}`}); continue; }
+    if(o.eerst && d.eerst==='nee') continue;
+    if(!d.afwijkend) uit.push({tab:'o:'+o.id, t:`${o.nr} ${o.kort||o.titel}: ${o.afwijkend}`});
+    if(d.afwijkend==='ja'){
+      const zicht=d.items.filter(i=>!i.verborgen);
+      if(!zicht.length) uit.push({tab:'o:'+o.id, t:`${o.nr} ${o.kort||o.titel}: nog geen constatering`});
+      zicht.forEach((it,i)=>{ if(!it.tekst||!it.op||!it.gv) uit.push({tab:'o:'+o.id, t:`${o.nr}.${i+1}: constatering, uitgangspunt of gevolg is nog leeg`}); });
+    }
+  }
+  return uit;
+}
+
+/* =====================================================================
+   Formulier
+   ===================================================================== */
+const form=document.getElementById('form');
+const tabs = () => [['project','Project'],['diensten','Diensten'], ...OND().map(o=>['o:'+o.id, o.kort||o.titel]), ['afronding','Hoeveelheden'], ['lijsten','Keuzelijsten'], ['export','Exporteren']];
+function renderTabs(){
+  const open = new Set(openPunten().map(x=>x.tab));
+  document.getElementById('tabs').innerHTML = tabs().map(([k,l])=>`<button data-tab="${k}" class="${UI.tab===k?'on':''}">${esc(l)}${open.has(k)?'<span class="dot" title="Nog niet alles ingevuld"></span>':''}</button>`).join('');
+}
+const fText = (label, path, o={}) => `<label class="f"><span>${label}</span><input type="${o.type||'text'}" data-p="${path}" value="${esc(getP(path))}" placeholder="${esc(o.ph||'')}" ${o.list?`list="${o.list}"`:''}></label>`;
+const fArea = (label, path, rows=3, ph='') => `<label class="f"><span>${label}</span><textarea rows="${rows}" data-p="${path}" placeholder="${esc(ph)}">${esc(getP(path))}</textarea></label>`;
+const seg = (path, opts, cls='') => `<div class="seg ${cls}">${opts.map(([v,l])=>`<button type="button" data-set="${path}" data-v="${esc(v)}" class="${getP(path)===v?'on':''}">${esc(l)}</button>`).join('')}</div>`;
+const multi = (path, opts) => `<div class="chips">${opts.map(v=>`<button type="button" class="chip ${(getP(path)||[]).includes(v)?'on':''}" data-tog="${path}" data-v="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+const kiesUit = (path, opts) => `<div class="chips">${opts.map(v=>`<button type="button" class="chip ${getP(path)===v?'on':''}" data-set="${path}" data-v="${esc(v)}">${esc(v.trim())}</button>`).join('')}</div>`;
+const JANEE = [['ja','Ja'],['nee','Nee']];
+function fotoIn(path, label){
+  const v=getP(path);
+  return `<div class="photo-in">${v?`<img src="${v}" alt="">`:'<span class="leeg"></span>'}<div><div class="lbl" style="margin:0 0 2px">${label}</div>
+    <label>${v?'Andere foto kiezen':'Foto kiezen'}<input type="file" accept="image/*" data-foto="${path}"></label>${v?` · <button type="button" data-act="fotoweg" data-p="${path}">Weghalen</button>`:''}</div></div>`;
+}
+const ctl = (lijst, i, n, verborgen) => `<div class="ctl"><button type="button" data-act="op" data-l="${lijst}" data-i="${i}" title="Omhoog" ${i===0?'disabled':''}>↑</button><button type="button" data-act="neer" data-l="${lijst}" data-i="${i}" title="Omlaag" ${i===n-1?'disabled':''}>↓</button><button type="button" data-act="verberg" data-l="${lijst}" data-i="${i}">${verborgen?'Tonen':'Verbergen'}</button></div>`;
+
+const FORMS = {
+  project(){
+    const p='project';
+    return `<div class="sec-title">Project</div><p class="hint">Deze gegevens komen op het voorblad, in de voettekst en in hoofdstuk 1.</p>
+      ${fText('Projectnaam (complex)', p+'.complex', {ph:'Bijv. Complex 123 Voorbeeldstraat'})}
+      <div class="grid2">${fText('Plaats', p+'.plaats')}${fText('Referentie', p+'.referentie')}</div>
+      <div class="grid2">${fText('Opdrachtgever', p+'.opdrachtgever')}${fText('VGO-bedrijf', p+'.vgo')}</div>
+      ${fText('Inspecteur', p+'.inspecteur', {ph:'Bijv. Dhr. J. Jansen'})}
+      <div class="grid2">${fText('Datum schouw', p+'.schouw', {type:'date'})}${fText('Opgesteld op', p+'.opgesteld', {type:'date'})}</div>
+      ${fotoIn(p+'.coverfoto', 'Foto voorblad')}
+      <hr class="sc"><div class="sec-title">1.2 Complex</div>
+      <div class="lbl">Type gebouw</div>${kiesUit(p+'.type', LST.TYPE_GEBOUW)}${fText('Of zelf typen', p+'.type')}
+      <div class="grid2">${fText('Aantal VHE', p+'.vhe', {type:'number'})}${fText('Aantal bouwlagen', p+'.lagen', {type:'number'})}</div>
+      <div class="lbl">Algemene ruimte</div>${kiesUit(p+'.algRuimte', LST.ALG_RUIMTE)}
+      ${fotoIn(p+'.situatie', 'Situatietekening')}${fotoIn(p+'.projectfoto', 'Projectoverzicht')}
+      ${fArea('Opmerking bij het complex (mag leeg)', p+'.opmerking', 2)}`;
+  },
+  diensten(){
+    const d='diensten';
+    return `<div class="sec-title">1.3 Diensten</div><p class="hint">Klik aan wat van toepassing is.</p>
+      <div class="lbl">Welke diensten heeft Calvisie geleverd?</div>${multi(d+'.lijst', LST.DIENSTEN)}
+      <div class="lbl">Hoeveelheden: niveau</div>${kiesUit(d+'.niveau', LST.NIVEAUS)}
+      <div class="lbl">Opgenomen</div>${multi(d+'.opname', LST.OPNAME)}
+      <div class="lbl">Steekproefgrootte</div>${kiesUit(d+'.steekproef', LST.STEEKPROEF)}
+      <div class="lbl">Visualisatie</div>${multi(d+'.visualisatie', LST.VISUALISATIE)}`;
+  },
+  afronding(){
+    return `<div class="sec-title">3.0 Hoeveelheden</div>
+      <p class="hint">De vaste teksten (3.1 Algemeen, 3.2 Werkwijze, 3.3 Uitsluitingen) staan in elk rapport hetzelfde. Aanpassen kan bij Keuzelijsten.</p>
+      ${fArea('3.4 Opmerkingen (leeg = niet in het rapport)', 'opmerkingen', 4)}
+      <div class="lbl">3.5 Bijlagen</div>${multi('bijlagen', LST.BIJLAGEN)}`;
+  },
+  lijsten(){
+    let h = `<div class="sec-title">Keuzelijsten</div><p class="hint">Wijzigingen gelden voor alle rapporten op deze computer. Standaardzinnen kun je ook bewaren vanuit een constatering.</p>`;
+    for(const o of OND()){
+      const z = LST.ZINNEN[o.id] || (LST.ZINNEN[o.id]=[]);
+      h += `<div class="lbl" style="margin-top:12px">${o.nr} ${esc(o.kort||o.titel)}: standaardzinnen</div>`;
+      z.forEach((s,i)=>{ h += `<div class="zinrij ${s[4]?'verborgen':''}"><div class="boven"><input type="text" data-zin="${o.id}.${i}.0" value="${esc(s[0])}" placeholder="Korte titel">${ctl('zin:'+o.id, i, z.length, s[4])}</div>
+        <textarea rows="2" data-zin="${o.id}.${i}.1">${esc(s[1])}</textarea>
+        <div class="grid2" style="margin-top:6px"><select data-zin="${o.id}.${i}.2">${Object.entries(LST.UITGANGSPUNT).map(([k,v])=>`<option value="${k}" ${s[2]===k?'selected':''}>${esc(v)}</option>`).join('')}</select>
+        <select data-zin="${o.id}.${i}.3">${Object.entries(LST.GEVOLG).map(([k,v])=>`<option value="${k}" ${s[3]===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></div>`; });
+      h += `<button type="button" class="add" data-act="zinerbij" data-o="${o.id}">+ Standaardzin</button>`;
+    }
+    const lijst = (k, l) => `<label class="f" style="margin-top:12px"><span>${l} (één per regel)</span><textarea rows="4" data-lijst="${k}">${esc((LST[k]||[]).join('\n'))}</textarea></label>`;
+    h += `<hr class="sc"><div class="sec-title">Overige lijsten</div>` + lijst('TYPE_GEBOUW','Type gebouw') + lijst('ALG_RUIMTE','Algemene ruimte') + lijst('DIENSTEN','Diensten') + lijst('NIVEAUS','Niveaus hoeveelheden') + lijst('STEEKPROEF','Steekproefgrootte') + lijst('VISUALISATIE','Visualisatie') + lijst('GLASSOORT','Glassoort') + lijst('RUIMTE','Ruimte (beglazing)') + lijst('BIJLAGEN','Bijlagen');
+    const vast = (k, l) => `<label class="f"><span>${l} (één punt per regel)</span><textarea rows="5" data-vast="${k}">${esc([].concat(LST.VAST[k]).join('\n'))}</textarea></label>`;
+    h += `<hr class="sc"><div class="sec-title">Vaste teksten</div>` + vast('over','Over dit rapport') + vast('diversiteit','2.0 Diversiteit en grilligheid') + vast('hoeveelheden','3.0 Inleiding') + vast('algemeen','3.1 Algemeen') + vast('werkwijze','3.2 Werkwijze Calvisie') + vast('uitsluitingen','3.3 Uitsluitingen')
+      + `<label class="f"><span>Let op-tekst bij "mogelijk gevolgen"</span><textarea rows="3" data-lijststr="LETOP">${esc(LST.LETOP)}</textarea></label>`;
+    h += `<div class="panel"><b>Terug naar de startlijsten</b><p class="hint" style="margin:4px 0 0">Zet alle keuzelijsten en vaste teksten terug zoals ze in het programma zijn meegeleverd.</p><div class="acts"><button type="button" class="btn" data-act="lijstenterug">Startlijsten terugzetten</button></div></div>`;
+    return h;
+  },
+  export(){
+    const punten = openPunten();
+    const pc = !IN_FRAME, online = IN_FRAME && DL && kanDirectPdf();
+    return `<div class="sec-title">Exporteren</div>
+      <div class="lbl" style="margin-top:8px">Controle</div>
+      ${punten.length ? punten.map(x=>`<div class="check warn">${esc(x.t)}<button type="button" data-tab="${x.tab}">Ga naar</button></div>`).join('') : '<div class="check ok">Alles is ingevuld.</div>'}
+      <div class="lbl" style="margin-top:14px">Bewaren</div>
+      <p class="hint">Sla het rapportbestand (.json) op in de projectmap, dan kun je later verder.</p>
+      <div class="panel"><div class="acts"><button type="button" class="btn" data-act="opslaan" ${IN_FRAME&&!DL?'disabled':''}>Rapportbestand opslaan</button>
+      <button type="button" class="btn solid" data-act="pdf" ${pc||online?'':'disabled'}>PDF maken</button></div>
+      ${pc?'<p class="hint" style="margin:8px 0 0">In het afdrukvenster: kies <b>Opslaan als PDF</b>, papier A4, marges <b>Geen</b>, schaal 100% en zet <b>Achtergrondafbeeldingen</b> aan.</p>':''}
+      ${!pc&&!online?'<p class="hint" style="margin:8px 0 0">Opslaan en PDF maken kunnen in deze weergave niet. Gebruik de versie op je pc.</p>':''}</div>`;
+  }
+};
+function onderdeelForm(o){
+  const d=S.onderdelen[o.id], pad='onderdelen.'+o.id;
+  let h = `<div class="sec-title">${o.nr} ${esc(o.titel)}</div>`;
+  if(o.eerst){
+    h += `<div class="vraag">${esc(o.eerst)}</div>${seg(pad+'.eerst', JANEE, 'kort')}`;
+    if(d.eerst!=='ja') return h + (d.eerst==='nee' ? `<p class="hint">In het rapport: “${esc(o.eerstNee)}”</p>` : '');
+  }
+  if(o.glas){
+    h += `<div class="lbl" style="margin-top:6px">Vastgestelde standaard</div>`;
+    d.glas.forEach((g,i)=>{ const gp=`${pad}.glas.${i}`;
+      h += `<div class="kaart ${g.verborgen?'verborgen':''}"><div class="kaart-h" style="cursor:default"><span class="t">${esc(g.soort||'Glassoort')} <small>${esc(g.ruimte)}</small></span>${ctl(gp.replace(/\.\d+$/,''), i, d.glas.length, g.verborgen)}</div><div class="kaart-b">
+        <div class="lbl">Glassoort</div>${kiesUit(gp+'.soort', LST.GLASSOORT)}
+        <div class="glasrij">${fText('Of zelf typen', gp+'.soort')}${fText('Fabrikant', gp+'.fabrikant')}${fText('Jaartal', gp+'.jaartal')}${fText('Ruimte', gp+'.ruimte')}</div>
+        <div class="chips" style="margin-top:-4px">${LST.RUIMTE.map(v=>`<button type="button" class="chip ghost" data-set="${gp}.ruimte" data-v="${esc(v)}">${esc(v.trim())}</button>`).join('')}</div>
+        <div class="lbl">Grillig</div>${seg(gp+'.grillig', [['Ja','Ja'],['Nee','Nee']], 'kort')}
+        ${fotoIn(gp+'.foto','Foto')}</div></div>`; });
+    h += `<button type="button" class="add" data-act="glaserbij">+ Glassoort</button><hr class="sc">`;
+  }
+  h += `<div class="vraag">${esc(o.afwijkend)}</div>${seg(pad+'.afwijkend', JANEE, 'kort')}`;
+  if(d.afwijkend==='nee') return h + `<p class="hint">In het rapport: “${esc(o.nee)}”</p>`;
+  if(d.afwijkend!=='ja') return h;
+  let nr=0;
+  d.items.forEach((it,i)=>{
+    const ip=`${pad}.items.${i}`; if(!it.verborgen) nr++;
+    const open = UI.open===it.id;
+    h += `<div class="kaart ${open?'actief':''} ${it.verborgen?'verborgen':''}" id="c-${it.id}"><div class="kaart-h" data-act="klap" data-id="${it.id}">
+      <span class="nr">${it.verborgen?'–':o.nr+'.'+nr}</span><span class="t">${esc(it.titel||'Nieuwe constatering')}${it.verborgen?' <small>(verborgen)</small>':''}</span>${ctl(pad+'.items', i, d.items.length, it.verborgen)}</div>`;
+    if(open) h += `<div class="kaart-b">
+      ${fText('Titel', ip+'.titel', {ph:'Kort, bijv. Zonwering door bewoners'})}
+      ${fArea('Constatering', ip+'.tekst', 3, 'Wat heb je gezien?')}
+      <div class="lbl">Uitgangspunt</div>${seg(ip+'.op', [['ja','Opgenomen'],['aanname','Aanname'],['nee','Niet opgenomen']])}
+      <div class="lbl">Gevolgen voor de uitvoering</div>${seg(ip+'.gv', [['geen','Geen'],['klein','Kleine kans'],['groot','Mogelijk']])}
+      ${it.gv==='groot'?fArea('Let op-tekst (leeg = standaardtekst)', ip+'.letop', 2, LST.LETOP):''}
+      <div class="grid2">${fotoIn(ip+'.fotos.0','Foto 1')}${fotoIn(ip+'.fotos.1','Foto 2')}</div>
+      <div style="display:flex;justify-content:flex-end;margin:-4px 0 8px"><button type="button" class="mini" data-act="alszin" data-o="${o.id}" data-i="${i}" title="Zet deze titel en tekst bij de standaardzinnen">Bewaar als standaardzin</button></div>
+    </div>`;
+    h += `</div>`;
+  });
+  const zinnen = (LST.ZINNEN[o.id]||[]).map((s,i)=>[s,i]).filter(([s])=>!s[4]);
+  h += `<div class="lbl" style="margin-top:10px">Constatering toevoegen</div><div class="chips">
+    ${zinnen.map(([s,i])=>`<button type="button" class="chip" data-act="zin" data-o="${o.id}" data-i="${i}" title="${esc(s[1])}">${esc(s[0])}</button>`).join('')}
+    <button type="button" class="chip ghost" data-act="leeg" data-o="${o.id}">+ Zelf typen</button></div>`;
+  return h;
+}
+function renderForm(keepScroll=true){
+  const top=form.scrollTop;
+  let h='';
+  if(UI.nieuw) h += `<div class="panel"><b>Nieuw rapport beginnen?</b><p class="hint" style="margin:4px 0 0">Het huidige rapport kun je terughalen met Ongedaan maken. Sla het eerst op als je het wilt bewaren.</p>
+    <div class="acts"><button type="button" class="btn solid" data-act="nieuwja">Leeg rapport</button><button type="button" class="btn" data-act="voorbeeld">Voorbeeld laden</button><button type="button" class="btn" data-act="nieuwnee">Annuleren</button></div></div>`;
+  if(S.voorbeeld && !UI.nieuw) h += `<div class="panel" style="padding:8px 12px"><span class="hint" style="margin:0">Dit is een <b>verzonnen voorbeeld</b>. Begin een eigen rapport met <b>Nieuw</b>.</span></div>`;
+  if(UI.tab.startsWith('o:')){ const o=ondDef(UI.tab.slice(2)); h += o ? onderdeelForm(o) : ''; }
+  else h += (FORMS[UI.tab]||FORMS.project)();
+  form.innerHTML = h;
+  renderTabs();
+  if(keepScroll) form.scrollTop=top;
+}
+
+/* ---------- invoer ---------- */
+form.addEventListener('focusin', e=>{ if(e.target.matches('[data-p],[data-zin],[data-lijst],[data-vast],[data-lijststr]')) onthoud(); });
+form.addEventListener('input', e=>{
+  const t=e.target;
+  if(t.dataset.p){ setP(t.dataset.p, t.value); if(S.voorbeeld && t.dataset.p.startsWith('project.')) delete S.voorbeeld; changed(false);
+    if(/\.titel$/.test(t.dataset.p)){ const k=t.closest('.kaart'); const sp=k&&k.querySelector('.kaart-h .t'); if(sp) sp.textContent=t.value||'Nieuwe constatering'; } return; }
+  if(t.dataset.zin){ const [o,i,k]=t.dataset.zin.split('.'); LST.ZINNEN[o][+i][+k]=t.value; bewaarLijsten(); return; }
+  if(t.dataset.lijst){ LST[t.dataset.lijst]=t.value.split('\n').map(x=>x.replace(/\s+$/,'')).filter(x=>x.trim()); bewaarLijsten(); return; }
+  if(t.dataset.vast){ const a=t.value.split('\n').map(x=>x.trim()).filter(Boolean); LST.VAST[t.dataset.vast]=Array.isArray(DEFAULT_LIJSTEN.VAST[t.dataset.vast])?a:a.join(' '); bewaarLijsten(); changed(false); return; }
+  if(t.dataset.lijststr){ LST[t.dataset.lijststr]=t.value; bewaarLijsten(); changed(false); }
+});
+form.addEventListener('change', async e=>{
+  const t=e.target;
+  if(t.dataset.zin && t.tagName==='SELECT'){ const [o,i,k]=t.dataset.zin.split('.'); LST.ZINNEN[o][+i][+k]=t.value; bewaarLijsten(); return; }
+  if(t.dataset.lijst||t.dataset.vast) { renderForm(); return; }
+  if(t.dataset.foto && t.files[0]){
+    try{ const src=await readImage(t.files[0], 1600, 'image/jpeg'); onthoud(); setP(t.dataset.foto, src); changed(true); setStatus('Foto toegevoegd'); }
+    catch(err){ setStatus('Deze foto kan niet worden gelezen.'); }
+  }
+});
+form.addEventListener('click', e=>{
+  const b=e.target.closest('button,[data-act]'); if(!b) return;
+  if(b.dataset.tab){ gaNaar(b.dataset.tab); return; }
+  if(b.dataset.set){ onthoud(); const p=b.dataset.set; setP(p, getP(p)===b.dataset.v && b.closest('.seg') ? '' : b.dataset.v); changed(true); return; }
+  if(b.dataset.tog){ onthoud(); const p=b.dataset.tog, v=b.dataset.v; const a=[...(getP(p)||[])]; const i=a.indexOf(v); i<0?a.push(v):a.splice(i,1);
+    if(p==='bijlagen') a.sort((x,y)=>LST.BIJLAGEN.indexOf(x)-LST.BIJLAGEN.indexOf(y)); setP(p,a); changed(true); return; }
+  const act=b.dataset.act; if(!act) return;
+  const ond = b.dataset.o ? S.onderdelen[b.dataset.o] : (UI.tab.startsWith('o:') ? S.onderdelen[UI.tab.slice(2)] : null);
+  if(act==='klap'){ if(e.target.closest('.ctl')) return; UI.open = UI.open===b.dataset.id ? null : b.dataset.id; renderForm(); return; }
+  if(act==='zin'){ const s=LST.ZINNEN[b.dataset.o][+b.dataset.i]; onthoud(); const it=leegItem({titel:s[0], tekst:s[1], op:s[2], gv:s[3]}); ond.items.push(it); UI.open=it.id; changed(true); setStatus('Constatering toegevoegd: pas gerust aan'); return; }
+  if(act==='leeg'){ onthoud(); const it=leegItem(); ond.items.push(it); UI.open=it.id; changed(true); setTimeout(()=>document.querySelector(`#c-${it.id} input`)?.focus(),0); return; }
+  if(act==='glaserbij'){ onthoud(); ond.glas.push(leegGlas()); changed(true); return; }
+  if(act==='alszin'){ const it=ond.items[+b.dataset.i]; if(!it.titel||!it.tekst){ setStatus('Vul eerst een titel en constatering in'); return; }
+    (LST.ZINNEN[b.dataset.o] ||= []).push([it.titel, it.tekst, it.op||'nee', it.gv||'geen']); bewaarLijsten(); renderForm(); setStatus('Bewaard bij de standaardzinnen'); return; }
+  if(act==='op'||act==='neer'||act==='verberg'){
+    const l=b.dataset.l, i=+b.dataset.i;
+    if(l.startsWith('zin:')){ const a=LST.ZINNEN[l.slice(4)]; if(act==='verberg') a[i][4]=!a[i][4]; else { const j=act==='op'?i-1:i+1; [a[i],a[j]]=[a[j],a[i]]; } bewaarLijsten(); renderForm(); return; }
+    onthoud(); const a=getP(l);
+    if(act==='verberg'){ a[i].verborgen=!a[i].verborgen; setStatus(a[i].verborgen?'Verborgen: staat niet meer in het rapport, maar is bewaard':'Weer zichtbaar in het rapport'); }
+    else { const j=act==='op'?i-1:i+1; [a[i],a[j]]=[a[j],a[i]]; }
+    changed(true); return; }
+  if(act==='fotoweg'){ onthoud(); setP(b.dataset.p, ''); changed(true); return; }
+  if(act==='zinerbij'){ (LST.ZINNEN[b.dataset.o] ||= []).push(['', '', 'nee', 'geen']); bewaarLijsten(); renderForm(); return; }
+  if(act==='lijstenterug'){ LST=clone(DEFAULT_LIJSTEN); bewaarLijsten(); changed(true); setStatus('Startlijsten teruggezet'); return; }
+  if(act==='nieuwja'||act==='voorbeeld'){ onthoud(); S = act==='voorbeeld' ? voorbeeldRapport() : nieuwRapport(); fileHandle=null; UI.nieuw=false; UI.open=null; UI.tab='project'; changed(true); setStatus(act==='voorbeeld'?'Voorbeeld geladen':'Nieuw rapport'); return; }
+  if(act==='nieuwnee'){ UI.nieuw=false; renderForm(); return; }
+  if(act==='opslaan'){ saveJson(); return; }
+  if(act==='pdf'){ maakPdf(); return; }
+});
+document.getElementById('tabs').addEventListener('click', e=>{ const b=e.target.closest('button[data-tab]'); if(b) gaNaar(b.dataset.tab); });
+function gaNaar(tab, doel){
+  UI.tab=tab; store.set(STORE_KEY+'-tab', tab); if(doel && doel.startsWith('c-')) UI.open=doel.slice(2);
+  renderForm(false); form.scrollTop=0;
+  if(doel){ const el=document.getElementById(doel); el?.scrollIntoView({block:'start'}); el?.querySelector('textarea,input')?.focus({preventScroll:true}); }
+}
+/* klikken in het voorbeeld springt naar het veld */
+document.getElementById('pages').addEventListener('click', e=>{
+  const el=e.target.closest('[data-ga]'); if(!el) return; const [tab, doel]=el.dataset.ga.split('|'); gaNaar(tab, doel);
+});
+
+let renderTimer=null;
+function changed(structural){
+  autosave();
+  if(structural) renderForm(); else renderTabs();
+  clearTimeout(renderTimer); renderTimer=setTimeout(renderReport, structural?0:250);
+}
+function readImage(file, max, type){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader(); fr.onerror=rej;
+    fr.onload=()=>{ const img=new Image(); img.onerror=rej; img.onload=()=>{
+      const s=Math.min(1, max/Math.max(img.width,img.height));
+      const c=document.createElement('canvas'); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      const g=c.getContext('2d'); if(type==='image/jpeg'){ g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); }
+      g.drawImage(img,0,0,c.width,c.height); res(c.toDataURL(type,.85)); }; img.src=fr.result; };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* =====================================================================
+   Rapport opbouwen: A4 staand, elk hoofdstuk op een nieuw blad, doorlopend
+   ===================================================================== */
+const V = (val, label) => val ? esc(val) : `<span class="r-var">${esc(label)}</span>`;
+const img = (src, leeg) => src ? `<img src="${src}" alt="">` : esc(leeg);
+function constatering(it, nr, tab){
+  const op = it.op ? `<span class="st ${it.op}">${esc(LST.UITGANGSPUNT[it.op])}</span>` : `<span class="r-var">Kies het uitgangspunt</span>`;
+  const gv = it.gv ? `<span class="st ${it.gv}">${esc(LST.GEVOLG[it.gv])}</span>` : `<span class="r-var">Kies de gevolgen</span>`;
+  const f = it.fotos.filter(Boolean);
+  return `<div class="cA" data-ga="${tab}|c-${it.id}">
+    <div class="kop"><span class="nr">${nr}</span><span>${V(it.titel,'Titel')}</span></div>
+    <div class="rij"><div><div class="lbl">Constatering</div><div class="x">${V(it.tekst,'Beschrijf wat je hebt gezien')}</div></div>
+      <div class="im">${img(f[0],'Foto 1')}</div><div class="im">${f[1]?img(f[1]):(f[0]?'':'Foto 2')}</div></div>
+    <div class="balk"><div><div class="lbl">Uitgangspunt</div>${op}</div><div><div class="lbl">Gevolgen voor de uitvoering</div>${gv}</div></div>
+    ${it.gv==='groot' ? `<div class="note"><b>Let op:</b> ${esc(it.letop||LST.LETOP)}</div>` : ''}
+  </div>`;
+}
+function stukken(){
+  const p=S.project, d=S.diensten, S2=[];
+  const ga = t => `data-ga="${t}"`;
+  S2.push({blocks:[
+    {html:`<div class="r-h1">Inhoudsopgave</div>`},
+    {html:`<div class="r-toc" id="toc"></div>`},
+    {html:`<div class="r-h3">Over dit rapport</div>`, keep:true},
+    {html:`<p class="r-p">${esc(LST.VAST.over)}</p>`},
+    {html:`<div class="r-kader"><div class="t">Zo leest u een constatering</div>
+      <div class="r-info een" style="border-top:0;margin:0">
+       <div>Constatering</div><div>Wat wij hebben gezien.</div>
+       <div>Uitgangspunt</div><div><span class="st ja">Opgenomen</span> &nbsp; <span class="st aanname">Op basis van een aanname</span> &nbsp; <span class="st nee">Niet opgenomen</span></div>
+       <div style="border-bottom:0">Gevolgen uitvoering</div><div style="border-bottom:0"><span class="st geen">Geen</span> &nbsp; <span class="st klein">Kleine kans</span> &nbsp; <span class="st groot">Mogelijk, afstemmen</span></div>
+      </div></div>`}
+  ]});
+  const gelijk = (a,b) => b.filter(x=>!a.includes(x));
+  const opname = d.opname.length ? `${opsom(d.opname.map((x,i)=>i?klein(x):x))}.` + (gelijk(d.opname, LST.OPNAME).length?` Niet opgenomen: ${opsom(gelijk(d.opname, LST.OPNAME).map(klein))}.`:'') : '';
+  const niveau = d.niveau ? d.niveau.replace(/^(\d+)\s+/, 'Niveau $1: ') : '';
+  S2.push({toc:['1.0','Gegevens'], blocks:[
+    {html:`<div class="r-h1">1.0 Gegevens</div>`, keep:true},
+    {html:`<div class="r-h2"><span class="nr">1.1</span>Algemeen</div>`, keep:true, toc:['1.1','Algemeen']},
+    {html:`<div class="r-info" ${ga('project')}><div>Project</div><div>${V(p.complex,'Projectnaam')}${p.plaats?' te '+esc(p.plaats):''}</div><div>Referentie</div><div>${V(p.referentie,'Referentie')}</div>
+      <div>Opdrachtgever</div><div>${V(p.opdrachtgever,'Opdrachtgever')}</div><div>VGO-bedrijf</div><div>${esc(p.vgo)||'–'}</div>
+      <div>Inspecteur</div><div>${V(p.inspecteur,'Inspecteur')}</div><div>Schouw</div><div>${V(fmtShort(p.schouw),'Datum')}</div>
+      <div></div><div></div><div>Opgesteld</div><div>${V(fmtShort(p.opgesteld),'Datum')}</div></div>`},
+    {html:`<div class="r-h2"><span class="nr">1.2</span>Complex</div>`, keep:true, toc:['1.2','Complex']},
+    {html:`<div class="r-info" ${ga('project')}><div>Type gebouw</div><div>${V(p.type,'Type')}</div><div>Aantal VHE</div><div>${p.vhe?esc(p.vhe)+' VHE':V('','Aantal')}</div>
+      <div>Bouwlagen</div><div>${esc(p.lagen)||'–'}</div><div>Algemene ruimte</div><div>${esc(p.algRuimte)||'–'}</div></div>`, keep:true},
+    {html:`<div class="r-twee" ${ga('project')}><figure><div class="im">${img(p.situatie,'Situatietekening')}</div><div class="fig-cap">Situatietekening</div></figure>
+      <figure><div class="im">${img(p.projectfoto,'Projectoverzicht')}</div><div class="fig-cap">Projectoverzicht</div></figure></div>`},
+    ...(p.opmerking ? [{html:`<p class="r-p" ${ga('project')}>${esc(p.opmerking)}</p>`}] : []),
+    {html:`<div class="r-h2"><span class="nr">1.3</span>Diensten</div>`, keep:true, toc:['1.3','Diensten']},
+    {html:`<div class="r-info een" ${ga('diensten')}><div>Geleverde diensten</div><div>${d.lijst.length?esc(opsom(d.lijst.map((x,i)=>i?klein(x):x))):V('','Kies de diensten')}</div>
+      ${niveau?`<div>Hoeveelheden</div><div>${esc(niveau)}</div>`:''}
+      ${opname?`<div>Opgenomen</div><div>${esc(opname)}</div>`:''}
+      ${d.steekproef?`<div>Steekproefgrootte</div><div>${esc(d.steekproef)}</div>`:''}
+      ${d.visualisatie.length?`<div>Visualisatie</div><div>${esc(opsom(d.visualisatie))}</div>`:''}</div>`}
+  ]});
+  const b2 = [
+    {html:`<div class="r-h1">2.0 Diversiteit</div>`, keep:true},
+    {html:`<div class="r-kader"><div class="t">Diversiteit en grilligheid</div>${[].concat(LST.VAST.diversiteit).map(t=>`<div class="r-li"><span>${esc(t)}</span></div>`).join('')}</div>`}
+  ];
+  for(const o of OND()){
+    const od=S.onderdelen[o.id], tab='o:'+o.id;
+    b2.push({html:`<div class="r-h2" data-ga="${tab}"><span class="nr">${o.nr}</span>${esc(o.titel)}</div>`, keep:true, toc:[o.nr,o.titel]});
+    if(o.eerst){
+      if(!od.eerst){ b2.push({html:`<div class="r-geen" data-ga="${tab}"><span class="r-var">${esc(o.eerst)}</span></div>`}); continue; }
+      if(od.eerst==='nee'){ b2.push({html:`<div class="r-geen" data-ga="${tab}">${esc(o.eerstNee)}</div>`}); continue; }
+      b2.push({html:`<p class="r-p" data-ga="${tab}">${esc(o.eerstJa)}</p>`, keep:!!o.glas});
+    }
+    if(o.glas){
+      const g=od.glas.filter(x=>!x.verborgen);
+      const mf = g.some(x=>x.foto);   // fotokolom alleen als er een foto is
+      if(g.length) b2.push({html:`<div class="r-cx" data-ga="${tab}" style="grid-template-columns:1.3fr 1fr .7fr 1.4fr .6fr${mf?' 24mm':''}">
+        <div class="h">Glassoort</div><div class="h">Fabrikant</div><div class="h">Jaartal</div><div class="h">Ruimte</div><div class="h">Grillig</div>${mf?'<div class="h">Foto</div>':''}
+        ${g.map(x=>`<div>${V(x.soort,'Glassoort')}</div><div>${esc(x.fabrikant)||'–'}</div><div>${esc(x.jaartal)||'–'}</div><div>${esc(x.ruimte)||'–'}</div><div>${esc(x.grillig)||'–'}</div>${mf?`<div class="im duim">${x.foto?img(x.foto):''}</div>`:''}`).join('')}</div>`});
+    }
+    if(!od.afwijkend){ b2.push({html:`<div class="r-geen" data-ga="${tab}"><span class="r-var">${esc(o.afwijkend)}</span></div>`}); continue; }
+    if(od.afwijkend==='nee'){ b2.push({html:`<div class="r-geen" data-ga="${tab}">${esc(o.nee)}</div>`}); continue; }
+    const items = od.items.filter(x=>!x.verborgen);
+    if(!items.length) b2.push({html:`<div class="r-geen" data-ga="${tab}"><span class="r-var">Voeg een constatering toe</span></div>`});
+    items.forEach((it,i)=>b2.push({html:constatering(it, `${o.nr}.${i+1}`, tab)}));
+  }
+  S2.push({toc:['2.0','Diversiteit'], blocks:b2});
+  const ol = a => `<ol class="r-ol">${[].concat(a).map(t=>`<li>${esc(t)}</li>`).join('')}</ol>`;
+  const b3 = [
+    {html:`<div class="r-h1">3.0 Hoeveelheden</div>`, keep:true},
+    {html:`<p class="r-p">${esc([].concat(LST.VAST.hoeveelheden).join(' '))}</p>`},
+    {html:`<div class="r-h2"><span class="nr">3.1</span>Algemeen</div>`, keep:true, toc:['3.1','Algemeen']},
+    {html:ol(LST.VAST.algemeen)},
+    {html:`<div class="r-h2"><span class="nr">3.2</span>Werkwijze Calvisie</div>`, keep:true, toc:['3.2','Werkwijze Calvisie']},
+    {html:ol(LST.VAST.werkwijze)},
+    {html:`<div class="r-h2"><span class="nr">3.3</span>Uitsluitingen</div>`, keep:true, toc:['3.3','Uitsluitingen']},
+    {html:ol(LST.VAST.uitsluitingen)}
+  ];
+  let n=4;
+  if(S.opmerkingen.trim()){ b3.push({html:`<div class="r-h2" data-ga="afronding"><span class="nr">3.${n}</span>Opmerkingen</div>`, keep:true, toc:['3.'+n,'Opmerkingen']}, {html:`<p class="r-p" data-ga="afronding">${esc(S.opmerkingen.trim())}</p>`}); n++; }
+  if(S.bijlagen.length){ b3.push({html:`<div class="r-h2" data-ga="afronding"><span class="nr">3.${n}</span>Bijlagen</div>`, keep:true, toc:['3.'+n,'Bijlagen']}, {html:`<div class="r-bijl" data-ga="afronding">${S.bijlagen.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`}); }
+  S2.push({toc:['3.0','Hoeveelheden'], blocks:b3});
+  return S2;
+}
+
+const DECO = `<svg class="deco" viewBox="0 0 210 297" preserveAspectRatio="none" aria-hidden="true"><g stroke="#efefef" stroke-width=".45" fill="none">
+  <line x1="44" y1="6" x2="6" y2="88"/><line x1="86" y1="6" x2="6" y2="180"/><line x1="6" y1="120" x2="86" y2="291"/><line x1="6" y1="230" x2="34" y2="291"/></g></svg>`;
+const toEl = h => { const t=document.createElement('template'); t.innerHTML=h.trim(); return t.content.firstElementChild; };
+function coverPage(){
+  const p=S.project, naam=p.complex||'Projectnaam';
+  const kl = naam.length>34 ? 'zeerlang' : naam.length>20 ? 'lang' : '';
+  return toEl(`<section class="page cover" data-ga="project">
+    <div class="cv-kicker">Rapportage hoeveelheden</div>
+    <h1 class="cv-title ${kl}">${esc(naam)}</h1>
+    <div class="cv-sub">${p.plaats?'te '+esc(p.plaats):''}</div>
+    <div class="cv-photo">${p.coverfoto?`<img src="${p.coverfoto}" alt="">`:'Foto van het complex (kies bij Project)'}</div>
+    <dl class="cv-meta">
+      <div><dt>Opdrachtgever</dt><dd>${esc(p.opdrachtgever||'–')}</dd></div><div><dt>Referentie</dt><dd>${esc(p.referentie||'–')}</dd></div><div><dt>Datum</dt><dd>${esc(fmtShort(p.opgesteld)||'–')}</dd></div>
+      <div><dt>Aantal VHE</dt><dd>${esc(p.vhe?p.vhe+' VHE':'–')}</dd></div><div><dt>Schouw</dt><dd>${esc(fmtShort(p.schouw)||'–')}</dd></div><div><dt>Inspecteur</dt><dd>${esc(p.inspecteur||'–')}</dd></div></dl>
+    <img class="cv-logo" src="${LOGO}" alt="Calvisie">
+  </section>`);
+}
+function renderReport(){
+  const root=document.getElementById('pages'); root.innerHTML='';
+  root.appendChild(coverPage());
+  let col=null; const tocItems=[];
+  const newPage = () => { const pg=toEl(`<section class="page">${DECO}<div class="frame"></div><div class="body"><div class="col"></div></div><div class="foot"><span></span><span></span></div></section>`); root.appendChild(pg); col=pg.querySelector('.col'); };
+  const fits = () => col.scrollHeight <= col.clientHeight + 1;
+  const place = b => { const el=toEl(b.html); col.appendChild(el); if(!fits()){ el.remove(); return null; } return el; };
+  for(const sec of stukken()){
+    newPage();
+    if(sec.toc) tocItems.push({nr:sec.toc[0], t:sec.toc[1], hoofd:true, page:root.children.length});
+    let chain=[];
+    for(const b of sec.blocks){
+      let el=place(b);
+      if(!el){
+        const moving = chain.length && chain.length < col.childElementCount ? chain : [];
+        moving.forEach(x=>x.remove()); newPage(); moving.forEach(x=>col.appendChild(x));
+        el=place(b);
+        if(!el){ el=toEl(b.html); el.classList.add('overflow'); col.appendChild(el); }
+      }
+      if(b.toc) tocItems.push({nr:b.toc[0], t:b.toc[1], el});
+      chain = b.keep ? [...chain, el] : [];
+    }
+  }
+  const pages=[...root.querySelectorAll('.page')];
+  const toc=document.getElementById('toc');
+  if(toc) toc.innerHTML = tocItems.map(i=>{ const n = i.el ? pages.indexOf(i.el.closest('.page'))+1 : i.page;
+    return `<div class="n">${i.nr}</div><div class="${i.hoofd?'hoofd':''}">${esc(i.t)}</div><div class="p">${n}</div>`; }).join('');
+  const p=S.project;
+  const links = [`<b>Rapportage hoeveelheden</b>`, esc([p.complex, p.plaats&&('te '+p.plaats)].filter(Boolean).join(' ')), p.referentie?esc('ref. '+p.referentie):''].filter(Boolean).join(' · ');
+  pages.forEach((pg,i)=>{ const f=pg.querySelector('.foot'); if(f){ f.children[0].innerHTML=links; f.children[1].textContent=`Blad ${i+1} van ${pages.length}`; } });
+  fitZoom();
+}
+function fitZoom(){
+  const prev=document.getElementById('preview'), pages=document.getElementById('pages');
+  const avail=prev.clientWidth-(window.innerWidth<900?32:48);
+  pages.style.zoom=Math.min(1.25, Math.max(.3, avail/(210*96/25.4)));
+}
+window.addEventListener('resize', ()=>{ clearTimeout(window._rz); window._rz=setTimeout(fitZoom,100); });
+
+/* =====================================================================
+   Opslaan, openen, PDF
+   ===================================================================== */
+const bestandsnaam = ext => { const p=S.project; return [p.referentie, 'Hoeveelheden', [p.complex, p.plaats&&('te '+p.plaats)].filter(Boolean).join(' ')].filter(Boolean).join(' - ') + ext; };
+function download(blob, name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); }
+/* Online (in claude.ai) kan de pagina niet zelf afdrukken of downloaden: bewaren loopt daar via
+   de downloads-functie van de viewer en de PDF wordt in de pagina zelf gemaakt. */
+let DL=null;
+const kanDirectPdf = () => typeof html2canvas!=='undefined' && typeof PDFLib!=='undefined';
+const SOORT = {json:{description:'Rapportbestand', accept:{'application/json':['.json']}}, pdf:{description:'PDF', accept:{'application/pdf':['.pdf']}}};
+async function bewaar(naam, data, soort){
+  if(DL){
+    try{ await DL.save({filename:naam, data}); return true; }
+    catch(e){ if(e && e.code==='declined') return false;
+      throw new Error(e && e.code==='rate_limited' ? 'Er staat nog een bewaarvenster open. Probeer het zo opnieuw.' : 'Bewaren lukt in deze weergave niet.'); }
+  }
+  if(window.showSaveFilePicker && !IN_FRAME){
+    try{ const h=await showSaveFilePicker({suggestedName:naam, types:[SOORT[soort]]}); const w=await h.createWritable(); await w.write(data); await w.close(); return true; }
+    catch(e){ if(e.name==='AbortError') return false; }
+  }
+  download(new Blob([data]), naam); return true;
+}
+async function saveJson(){
+  const data=JSON.stringify(S,null,1), naam=bestandsnaam(' - rapport.json');
+  if(!DL && window.showSaveFilePicker && !IN_FRAME){
+    try{ if(!fileHandle) fileHandle=await showSaveFilePicker({suggestedName:naam, types:[SOORT.json]});
+      const w=await fileHandle.createWritable(); await w.write(data); await w.close(); setStatus(`Opgeslagen: ${fileHandle.name}`); return; }
+    catch(e){ if(e.name==='AbortError') return; fileHandle=null; }
+  }
+  try{ if(await bewaar(naam, data, 'json')) setStatus('Rapportbestand bewaard'); }
+  catch(e){ setStatus(e.message); }
+}
+function openJson(text, naam, handle){
+  try{ const r=JSON.parse(text); if(!r || !r.onderdelen) throw new Error('soort'); onthoud(); S=migreer(r); fileHandle=handle||null; UI.open=null; UI.tab='project'; changed(true); setStatus('Geopend: '+naam); }
+  catch(e){ setStatus('Dit bestand is geen rapportbestand van de rapportbouwer hoeveelheden.'); }
+}
+async function pdfBytes(voortgang){
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;left:-10000px;top:0;width:210mm;background:#fff';
+  document.body.appendChild(host);
+  try{
+    const pdf=await PDFLib.PDFDocument.create();
+    const bladen=[...document.querySelectorAll('#pages .page')];
+    for(const [i,pg] of bladen.entries()){
+      voortgang && voortgang(i+1, bladen.length);
+      const c=pg.cloneNode(true); c.style.margin='0'; c.style.boxShadow='none';
+      c.querySelectorAll('.r-var').forEach(x=>x.classList.remove('r-var'));
+      host.replaceChildren(c);
+      const canvas=await html2canvas(c,{scale:2.5, backgroundColor:'#ffffff', logging:false});
+      const jpg=await pdf.embedJpg(canvas.toDataURL('image/jpeg',.92));
+      pdf.addPage([595.28,841.89]).drawImage(jpg,{x:0,y:0,width:595.28,height:841.89});
+    }
+    pdf.setTitle(bestandsnaam('')); pdf.setCreator('Rapportbouwer hoeveelheden');
+    return await pdf.save();
+  } finally { host.remove(); }
+}
+let pdfBezig=false;
+async function maakPdf(){
+  if(!IN_FRAME){ const old=document.title; document.title=bestandsnaam(''); window.print(); setTimeout(()=>document.title=old,500); return; }
+  if(pdfBezig || !kanDirectPdf() || !DL) return;
+  pdfBezig=true;
+  try{
+    const naam=bestandsnaam('.pdf');
+    const bytes=await pdfBytes((i,n)=>setStatus(`PDF maken: blad ${i} van ${n} …`));
+    setStatus(await bewaar(naam, bytes, 'pdf') ? 'PDF bewaard' : 'PDF niet bewaard');
+  }catch(e){ setStatus('PDF maken lukt in deze weergave niet. Gebruik de versie op je pc.'); }
+  pdfBezig=false;
+}
+
+document.getElementById('btnUndo').onclick = ongedaan;
+document.getElementById('btnNew').onclick = ()=>{ UI.nieuw=true; renderForm(false); form.scrollTop=0; };
+document.getElementById('btnSave').onclick = saveJson;
+document.getElementById('btnOpen').onclick = async ()=>{
+  if(window.showOpenFilePicker && !IN_FRAME){
+    try{ const [h]=await showOpenFilePicker({types:[SOORT.json]}); const f=await h.getFile(); openJson(await f.text(), f.name, h); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  document.getElementById('fileOpen').click();
+};
+document.getElementById('fileOpen').onchange = async e=>{ const f=e.target.files[0]; if(f) openJson(await f.text(), f.name); e.target.value=''; };
+document.getElementById('btnPrint').onclick = maakPdf;
+window.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && !e.shiftKey && e.key.toLowerCase()==='z' && !e.target.closest('input,textarea')){ e.preventDefault(); ongedaan(); } });
+window.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='s' && (!IN_FRAME||DL)){ e.preventDefault(); saveJson(); } });
+function knoppen(){
+  document.getElementById('btnSave').hidden = IN_FRAME && !DL;
+  document.getElementById('btnPrint').hidden = IN_FRAME && !(DL && kanDirectPdf());
+  document.getElementById('proef').hidden = !(IN_FRAME && !DL);
+}
+knoppen();
+if(window.claude && typeof window.claude.use==='function')
+  window.claude.use('downloads').then(d=>{ DL=d||null; knoppen(); if(UI.tab==='export') renderForm(); }).catch(()=>{});
+
+renderForm(false);
+(document.fonts?.ready || Promise.resolve()).then(renderReport);
+renderReport();
+</script>
+</body>
+</html>
