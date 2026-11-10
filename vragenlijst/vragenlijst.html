@@ -1,0 +1,186 @@
+<title>Vragenlijst hoeveelhedenrapport</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Indeling: één smalle kolom, vragen gegroepeerd per onderwerp, blauwe lijn zoals de Calvisie-rapporten */
+:root{
+  --bg:#f6f8fb; --vlak:#ffffff; --tekst:#16202c; --zacht:#5b6878; --lijn:#d7dee8;
+  --blauw:#2f6aa8; --navy:#14304f; --blauwzacht:#e6eef8; --ok:#2f8a4e;
+  --kop:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151d; --vlak:#17202b; --tekst:#e6ecf3; --zacht:#9aa8b8; --lijn:#2a3746;
+  --blauw:#6fa3dc; --navy:#cfe0f3; --blauwzacht:#1d2c3d; --ok:#5cc07f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151d; --vlak:#17202b; --tekst:#e6ecf3; --zacht:#9aa8b8; --lijn:#2a3746;
+  --blauw:#6fa3dc; --navy:#cfe0f3; --blauwzacht:#1d2c3d; --ok:#5cc07f; color-scheme:dark}
+body{background:var(--bg);color:var(--tekst);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 60px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header{border-bottom:2px solid var(--blauw);padding-bottom:16px;display:flex;flex-direction:column;gap:6px}
+.merk{font-family:var(--kop);font-weight:700;letter-spacing:.14em;font-size:12px;color:var(--blauw);text-transform:uppercase}
+h1{font-family:var(--kop);font-size:28px;line-height:1.15;margin:0;color:var(--navy);text-wrap:balance}
+header p{margin:0;color:var(--zacht);max-width:62ch}
+.status{font-size:13px;color:var(--zacht)} .status.ok{color:var(--ok)}
+section{display:flex;flex-direction:column;gap:14px}
+h2{font-family:var(--kop);font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--blauw);margin:0;padding-top:6px}
+.vraag{background:var(--vlak);border:1px solid var(--lijn);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.vraag h3{margin:0;font-size:15px;font-weight:600;text-wrap:balance}
+.vraag .uitleg{margin:-4px 0 0;color:var(--zacht);font-size:13px}
+.opties{display:flex;flex-wrap:wrap;gap:8px}
+.optie{position:relative}
+.optie input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.optie span{display:inline-block;padding:7px 12px;border:1px solid var(--lijn);border-radius:4px;font-size:14px;background:var(--vlak);cursor:pointer;user-select:none}
+.optie input:checked + span{background:var(--blauw);border-color:var(--blauw);color:#fff}
+.optie input:focus-visible + span{outline:2px solid var(--blauw);outline-offset:2px}
+textarea{width:100%;box-sizing:border-box;min-height:44px;resize:vertical;border:1px solid var(--lijn);border-radius:4px;padding:8px 10px;font:inherit;font-size:14px;background:var(--bg);color:var(--tekst)}
+textarea:focus{outline:2px solid var(--blauw);outline-offset:0;border-color:var(--blauw)}
+.voet{font-size:13px;color:var(--zacht);border-top:1px solid var(--lijn);padding-top:14px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="merk">Calvisie · meetafdeling</div>
+    <h1>Vragenlijst hoeveelhedenrapport</h1>
+    <p>Klik aan wat past en zet er gerust iets bij in het tekstvak. Je antwoorden worden vanzelf bewaard, ik lees ze daarna uit.</p>
+    <div class="status" id="status">Bezig met laden…</div>
+  </header>
+  <form id="form" autocomplete="off"></form>
+  <div class="voet">Klaar? Zeg het in de chat, dan lees ik de antwoorden uit en vat ik ze samen.</div>
+</div>
+
+<script>
+const VRAGEN = [
+ {groep:"Gebruik", items:[
+  {id:"wie", t:"Wie vult het rapport in?", type:"een", o:["De inspecteur zelf","Iemand op kantoor (zoals nu Hadassa)","Beide: inspecteur begint, kantoor maakt af"]},
+  {id:"waar", t:"Waar wordt het ingevuld?", type:"meer", o:["Pc op kantoor","iPad / tablet op locatie","Telefoon op locatie"]},
+  {id:"nu", t:"Waarmee wordt het rapport nu gemaakt?", u:"Programma of app, en hoe de foto's erin komen.", type:"tekst"},
+  {id:"lezer", t:"Wie leest het rapport vooral?", type:"meer", o:["Opdrachtgever (corporatie)","VGO-bedrijf / aannemer","Intern bij Calvisie"]}
+ ]},
+ {groep:"Inhoud", items:[
+  {id:"onderdelen", t:"Blijven de onderdelen 2.1 t/m 2.6 vast?", u:"Elementen, Beglazing, ZAV, Behandelingen, Daken, Erfafscheidingen.", type:"een", o:["Ja, deze zes zijn genoeg","Ja, maar soms extra onderdelen nodig","Nee, de lijst moet anders"]},
+  {id:"risico", t:"Risico (Hoog / Laag / NVT) en Opgenomen (Ja / Aanname / Nee): zo houden?", type:"een", o:["Ja, precies zo","Ja, maar met andere woorden","Graag anders"]},
+  {id:"note", t:"Bij Hoog risico stond in Nieuwveen een NOTE (terugkoppeling naar opdrachtgever). Wil je dat de bouwer die standaard voorstelt?", type:"een", o:["Ja, bij Hoog automatisch voorstellen","Nee, alleen als ik het zelf toevoeg"]},
+  {id:"overzicht", t:"Een overzichtstabel met alle constateringen (onderdeel, opmerking, risico, opgenomen) vooraan of achteraan?", u:"Handig om in één oogopslag te zien wat wel en niet is meegenomen.", type:"een", o:["Ja, vooraan","Ja, achteraan","Nee, niet nodig"]},
+  {id:"fotos", t:"Hoeveel foto's per opmerking?", type:"een", o:["1","2 (zoals nu)","Tot 4","Vrij, zoveel als nodig"]},
+  {id:"hoeveelheden", t:"Moeten er hoeveelheden in het rapport zelf komen?", u:"Nu staan ze alleen in de bijlagen (verzamelstaat, Excel).", type:"een", o:["Nee, blijft in de bijlage","Ja, een korte samenvatting","Ja, volledige tabellen"]},
+  {id:"vasttekst", t:"De vaste teksten in 3.1 t/m 3.3: hoe wil je die gebruiken?", type:"een", o:["Altijd hetzelfde","Per rapport punten aan- of uitvinken","Per rapport vrij aanpassen"]},
+  {id:"diensten", t:"Kloppen deze keuzes bij Diensten?", u:"Hoeveelheden, Conditiemeting, Houtrot, Visualisatie · niveau 1 Basic t/m 4 Visuals · Buiten/Binnen/Beglazing/Daken · Steekproefgrootte · Visualisatie 1 Foto t/m 4 Drone.", type:"een", o:["Ja, klopt","Er mist iets / er kan iets af"]}
+ ]},
+ {groep:"Opmaak", items:[
+  {id:"leeg", t:"Wat doen we met een onderdeel waar 'Nee' staat?", u:"Nu krijgt elk onderdeel een eigen, vaak bijna leeg blad.", type:"een", o:["Korte regel: 'Geen afwijkingen geconstateerd'","Helemaal weglaten","Zoals nu, eigen blad"]},
+  {id:"blad", t:"Hoe moet de tekst over de bladen lopen?", type:"een", o:["Doorlopend, elk hoofdstuk op nieuw blad","Alles doorlopend","Elk onderdeel op eigen blad"]},
+  {id:"stijl", t:"Welke stijl spreekt je aan?", type:"een", o:["Zoals het houtrotrapport (navy voorblad)","Zoals de huidige rapporten (wit, rustig)","Laat me voorstellen zien"]},
+  {id:"inhoud", t:"Inhoudsopgave?", type:"een", o:["Ja, met paginanummers","Ja, zonder nummers","Niet nodig"]},
+  {id:"liggend", t:"Staand of liggend A4?", type:"een", o:["Staand","Liggend","Maakt niet uit"]}
+ ]},
+ {groep:"Tot slot", items:[
+  {id:"stoort", t:"Wat stoort je het meest aan de huidige rapporten?", type:"tekst"},
+  {id:"geslaagd", t:"Wanneer is de nieuwe rapportbouwer geslaagd?", type:"tekst"},
+  {id:"overig", t:"Nog iets wat ik moet weten?", type:"tekst"}
+ ]}
+];
+
+const form = document.getElementById("form");
+const statusEl = document.getElementById("status");
+let antwoorden = {};
+try { antwoorden = JSON.parse(localStorage.getItem("vl-hoeveelheden") || "{}"); } catch(e) {}
+
+function bouw(){
+  form.innerHTML = "";
+  for (const g of VRAGEN){
+    const s = document.createElement("section");
+    const h = document.createElement("h2"); h.textContent = g.groep; s.appendChild(h);
+    for (const v of g.items){
+      const d = document.createElement("div"); d.className = "vraag";
+      const t = document.createElement("h3"); t.textContent = v.t; d.appendChild(t);
+      if (v.u){ const p = document.createElement("p"); p.className="uitleg"; p.textContent=v.u; d.appendChild(p); }
+      const a = antwoorden[v.id] || {};
+      if (v.o){
+        const box = document.createElement("div"); box.className="opties";
+        v.o.forEach((o,i)=>{
+          const l = document.createElement("label"); l.className="optie";
+          const inp = document.createElement("input");
+          inp.type = v.type==="meer" ? "checkbox" : "radio";
+          inp.name = v.id; inp.value = o; inp.id = v.id+"-"+i;
+          const keuze = a.keuze;
+          inp.checked = Array.isArray(keuze) ? keuze.includes(o) : keuze===o;
+          // nog een keer klikken op een gekozen rondje maakt het weer leeg
+          if (inp.type==="radio") inp.addEventListener("click", ()=>{ if (inp.dataset.was==="1"){ inp.checked=false; inp.dataset.was=""; wijzig(); } });
+          inp.addEventListener("change", wijzig);
+          const sp = document.createElement("span"); sp.textContent = o;
+          l.append(inp, sp); box.appendChild(l);
+        });
+        d.appendChild(box);
+      }
+      const ta = document.createElement("textarea");
+      ta.id = v.id+"-toel"; ta.dataset.vraag = v.id;
+      ta.placeholder = v.type==="tekst" ? "Typ hier je antwoord" : "Toelichting (mag leeg)";
+      if (v.type==="tekst") ta.style.minHeight="72px";
+      ta.value = a.toel || "";
+      ta.addEventListener("input", wijzig);
+      d.appendChild(ta);
+      s.appendChild(d);
+    }
+    form.appendChild(s);
+  }
+  markeerRadios();
+}
+function markeerRadios(){ form.querySelectorAll('input[type=radio]').forEach(r=>r.dataset.was = r.checked ? "1" : ""); }
+
+function lees(){
+  const uit = {};
+  for (const g of VRAGEN) for (const v of g.items){
+    const sel = [...form.querySelectorAll(`input[name="${v.id}"]:checked`)].map(i=>i.value);
+    const toel = form.querySelector(`textarea[data-vraag="${v.id}"]`).value;
+    const keuze = v.type==="meer" ? sel : (sel[0] || "");
+    if ((Array.isArray(keuze) ? keuze.length : keuze) || toel.trim()) uit[v.id] = {vraag:v.t, keuze, toel};
+  }
+  return uit;
+}
+
+let db = null, docRef = null, timer = null, bezig = false, opnieuw = false;
+function wijzig(){
+  markeerRadios();
+  antwoorden = lees();
+  try { localStorage.setItem("vl-hoeveelheden", JSON.stringify(antwoorden)); } catch(e) {}
+  statusEl.className = "status"; statusEl.textContent = "Wijziging…";
+  clearTimeout(timer); timer = setTimeout(bewaar, 800);
+}
+async function bewaar(){
+  if (!docRef){ statusEl.textContent = "Bewaard in deze browser (online opslaan niet beschikbaar)."; return; }
+  if (bezig){ opnieuw = true; return; }
+  bezig = true;
+  try {
+    await docRef.set({antwoorden, bijgewerkt: new Date().toISOString()});
+    statusEl.className = "status ok"; statusEl.textContent = "Bewaard";
+  } catch(e){
+    statusEl.className = "status"; statusEl.textContent = "Online bewaren lukte niet; je antwoorden staan nog wel in deze browser.";
+  }
+  bezig = false;
+  if (opnieuw){ opnieuw = false; bewaar(); }
+}
+
+bouw();
+(async ()=>{
+  const wacht = setTimeout(()=>{ if(!docRef) statusEl.textContent = "Online opslaan reageert niet; antwoorden blijven in deze browser."; }, 10000);
+  try {
+    const c = window.claude;
+    if (!c || !c.use){ clearTimeout(wacht); statusEl.textContent = "Bewaard in deze browser."; return; }
+    const [d, u] = await Promise.all([c.use("db"), c.use("user")]);
+    const id = u ? await u.id() : null;
+    if (!d || !id){ clearTimeout(wacht); statusEl.textContent = "Log in om online te bewaren; nu bewaard in deze browser."; return; }
+    db = d; docRef = db.doc("antwoorden/" + id);
+    const snap = await docRef.get();
+    clearTimeout(wacht);
+    if (snap.exists && snap.data().antwoorden){
+      antwoorden = snap.data().antwoorden; bouw();
+      statusEl.className = "status ok"; statusEl.textContent = "Eerdere antwoorden geladen";
+    } else {
+      statusEl.textContent = "Klaar om in te vullen";
+      if (Object.keys(antwoorden).length) bewaar();
+    }
+  } catch(e){ clearTimeout(wacht); statusEl.textContent = "Bewaard in deze browser."; }
+})();
+</script>
