@@ -116,6 +116,9 @@ input:focus,textarea:focus,select:focus{outline:2px solid var(--ui-softline);bor
 .zinrij.verborgen{opacity:.55}
 .zinrij .boven{display:flex;gap:6px;align-items:center;margin-bottom:6px}
 .zinrij .boven input{flex:1}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(10,20,35,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-in{background:var(--ui-panel);color:var(--ui-text);border-radius:12px;padding:18px;width:min(540px,100%);max-height:100%;overflow:auto;box-shadow:var(--shadow)}
+.modal .acts{display:flex;gap:8px;justify-content:flex-end}
 hr.sc{border:0;border-top:1px solid var(--ui-border);margin:16px 0}
 
 /* ---------- rapportbladen: A4 staand, altijd wit papier ---------- */
@@ -212,7 +215,7 @@ hr.sc{border:0;border-top:1px solid var(--ui-border);margin:16px 0}
 @page{size:A4 portrait;margin:0}
 @media print{
   html,body{height:auto;background:#fff}
-  .topbar,.editor{display:none!important}
+  .topbar,.editor,.modal{display:none!important}
   .app{display:block;height:auto}
   .preview{padding:0;overflow:visible}
   #pages{zoom:1!important;width:auto;margin:0}
@@ -268,7 +271,7 @@ const OND = () => LST.ONDERDELEN;
 const ondDef = id => OND().find(o=>o.id===id);
 
 /* ---------- het rapport ---------- */
-const leegItem = (extra={}) => ({id:newId(), titel:'', tekst:'', op:'', gv:'', letop:'', fotos:['',''], verborgen:false, ...extra});
+const leegItem = (extra={}) => ({id:newId(), titel:'', tekst:'', standaard:'', glasId:'', op:'', gv:'', letop:'', fotos:['',''], verborgen:false, ...extra});
 const leegGlas = () => ({id:newId(), soort:'', fabrikant:'', jaartal:'', ruimte:'', grillig:'', foto:'', verborgen:false});
 function nieuwRapport(){
   const ond = {}; DEFAULT_LIJSTEN.ONDERDELEN.forEach(o=>ond[o.id]={eerst:'', afwijkend:'', items:[], glas:[]});
@@ -284,13 +287,13 @@ function voorbeeldRapport(){
   Object.assign(r.project, {complex:'De Voorbeeldhof', plaats:'Testdorp', referentie:'99001', opdrachtgever:'Woonstichting Voorbeeld', vgo:'Schildersbedrijf Proef',
     inspecteur:'Dhr. J. Voorbeeld', schouw:'2026-11-02', opgesteld:'2026-11-05', type:'Eengezinswoningen', vhe:'24', lagen:'3', algRuimte:'Niet aanwezig'});
   Object.assign(r.diensten, {lijst:['Hoeveelheden','Houtrot','Visualisatie'], niveau:'3 Scenario', opname:['Buiten','Beglazing'], steekproef:'20%', visualisatie:['Autocad']});
-  const z = (id,i,extra) => { const s=LST.ZINNEN[id][i]; return leegItem({titel:s[0], tekst:s[1], op:s[2], gv:s[3], ...extra}); };
+  const z = (id,i,extra) => { const s=LST.ZINNEN[id][i]; return leegItem({titel:s[0], tekst:s[1], op:s[2], gv:s[3], standaard:s[5]||'', ...extra}); };
   const o = r.onderdelen;
-  o.elementen.afwijkend='ja'; o.elementen.items=[z('elementen',1)];
+  o.elementen.afwijkend='ja'; o.elementen.items=[z('elementen',0)];
   o.beglazing.eerst='ja'; o.beglazing.afwijkend='ja';
-  o.beglazing.glas=[{...leegGlas(), soort:'HR++-beglazing', fabrikant:'Voorbeeldglas', jaartal:'2008', ruimte:'Woon- en slaapvertrekken', grillig:'Nee'},
+  o.beglazing.glas=[{...leegGlas(), soort:'HR++-beglazing', fabrikant:'Voorbeeldglas', jaartal:'2008', ruimte:'Woon- en slaapvertrekken', grillig:'Ja'},
                     {...leegGlas(), soort:'Draadglas', ruimte:'Bergingen', grillig:'Nee'}];
-  o.beglazing.items=[z('beglazing',0)];
+  o.beglazing.items=[z('beglazing',0,{glasId:o.beglazing.glas[0].id, titel:'Grillige beglazing: HR++-beglazing'})];
   o.zav.afwijkend='ja'; o.zav.items=[z('zav',0), z('zav',1)];
   o.behandelingen.afwijkend='nee';
   o.daken.eerst='nee';
@@ -339,7 +342,8 @@ function openPunten(){
     if(d.afwijkend==='ja'){
       const zicht=d.items.filter(i=>!i.verborgen);
       if(!zicht.length) uit.push({tab:'o:'+o.id, t:`${o.nr} ${o.kort||o.titel}: nog geen constatering`});
-      zicht.forEach((it,i)=>{ if(!it.tekst||!it.op||!it.gv) uit.push({tab:'o:'+o.id, t:`${o.nr}.${i+1}: constatering, uitgangspunt of gevolg is nog leeg`}); });
+      zicht.forEach((it,i)=>{ if(!it.tekst||!it.op||!it.gv) uit.push({tab:'o:'+o.id, t:`${o.nr}.${i+1}: constatering, hoeveelheden of gevolg is nog leeg`});
+        else if(it.glasId && !it.standaard) uit.push({tab:'o:'+o.id, t:`${o.nr}.${i+1}: nog niet ingevuld waar wij standaard van zijn uitgegaan`}); });
     }
   }
   return uit;
@@ -405,7 +409,8 @@ const FORMS = {
       const z = LST.ZINNEN[o.id] || (LST.ZINNEN[o.id]=[]);
       h += `<div class="lbl" style="margin-top:12px">${o.nr} ${esc(o.kort||o.titel)}: standaardzinnen</div>`;
       z.forEach((s,i)=>{ h += `<div class="zinrij ${s[4]?'verborgen':''}"><div class="boven"><input type="text" data-zin="${o.id}.${i}.0" value="${esc(s[0])}" placeholder="Korte titel">${ctl('zin:'+o.id, i, z.length, s[4])}</div>
-        <textarea rows="2" data-zin="${o.id}.${i}.1">${esc(s[1])}</textarea>
+        <textarea rows="2" data-zin="${o.id}.${i}.1" placeholder="Constatering">${esc(s[1])}</textarea>
+        <textarea rows="2" data-zin="${o.id}.${i}.5" placeholder="Uitgangspunt: waar zijn wij standaard van uitgegaan? (mag leeg)" style="margin-top:6px">${esc(s[5]||'')}</textarea>
         <div class="grid2" style="margin-top:6px"><select data-zin="${o.id}.${i}.2">${Object.entries(LST.UITGANGSPUNT).map(([k,v])=>`<option value="${k}" ${s[2]===k?'selected':''}>${esc(v)}</option>`).join('')}</select>
         <select data-zin="${o.id}.${i}.3">${Object.entries(LST.GEVOLG).map(([k,v])=>`<option value="${k}" ${s[3]===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></div>`; });
       h += `<button type="button" class="add" data-act="zinerbij" data-o="${o.id}">+ Standaardzin</button>`;
@@ -447,6 +452,7 @@ function onderdeelForm(o){
         <div class="glasrij">${fText('Of zelf typen', gp+'.soort')}${fText('Fabrikant', gp+'.fabrikant')}${fText('Jaartal', gp+'.jaartal')}${fText('Ruimte', gp+'.ruimte')}</div>
         <div class="chips" style="margin-top:-4px">${LST.RUIMTE.map(v=>`<button type="button" class="chip ghost" data-set="${gp}.ruimte" data-v="${esc(v)}">${esc(v.trim())}</button>`).join('')}</div>
         <div class="lbl">Grillig</div>${seg(gp+'.grillig', [['Ja','Ja'],['Nee','Nee']], 'kort')}
+        ${g.grillig==='Ja'?`<div style="margin:-4px 0 10px"><button type="button" class="mini" data-act="grillig" data-i="${i}">Constatering en uitgangspunt aanpassen</button></div>`:''}
         ${fotoIn(gp+'.foto','Foto')}</div></div>`; });
     h += `<button type="button" class="add" data-act="glaserbij">+ Glassoort</button><hr class="sc">`;
   }
@@ -462,7 +468,8 @@ function onderdeelForm(o){
     if(open) h += `<div class="kaart-b">
       ${fText('Titel', ip+'.titel', {ph:'Kort, bijv. Zonwering door bewoners'})}
       ${fArea('Constatering', ip+'.tekst', 3, 'Wat heb je gezien?')}
-      <div class="lbl">Uitgangspunt</div>${seg(ip+'.op', [['ja','Opgenomen'],['aanname','Aanname'],['nee','Niet opgenomen']])}
+      ${fArea('Uitgangspunt: waar zijn wij standaard van uitgegaan?'+(it.glasId?'':' (mag leeg)'), ip+'.standaard', 2, 'Bijv. Wij zijn uitgegaan van het kozijn met een klepraam als bovenlicht.')}
+      <div class="lbl">In de hoeveelheden</div>${seg(ip+'.op', [['ja','Opgenomen'],['aanname','Aanname'],['nee','Niet opgenomen']])}
       <div class="lbl">Gevolgen voor de uitvoering</div>${seg(ip+'.gv', [['geen','Geen'],['klein','Kleine kans'],['groot','Mogelijk']])}
       ${it.gv==='groot'?fArea('Let op-tekst (leeg = standaardtekst)', ip+'.letop', 2, LST.LETOP):''}
       <div class="grid2">${fotoIn(ip+'.fotos.0','Foto 1')}${fotoIn(ip+'.fotos.1','Foto 2')}</div>
@@ -512,17 +519,23 @@ form.addEventListener('change', async e=>{
 form.addEventListener('click', e=>{
   const b=e.target.closest('button,[data-act]'); if(!b) return;
   if(b.dataset.tab){ gaNaar(b.dataset.tab); return; }
-  if(b.dataset.set){ onthoud(); const p=b.dataset.set; setP(p, getP(p)===b.dataset.v && b.closest('.seg') ? '' : b.dataset.v); changed(true); return; }
+  if(b.dataset.set){ onthoud(); const p=b.dataset.set; setP(p, getP(p)===b.dataset.v && b.closest('.seg') ? '' : b.dataset.v);
+    const gm=/^(onderdelen\.\w+)\.glas\.(\d+)\.grillig$/.exec(p);
+    if(gm){ const od=getP(gm[1]), g=od.glas[+gm[2]], it=od.items.find(x=>x.glasId===g.id);
+      if(g.grillig==='Ja'){ changed(true); grilligPopup(od, g); return; }
+      if(it && !it.verborgen){ it.verborgen=true; setStatus('De constatering bij deze glassoort is verborgen (bewaard)'); } }
+    changed(true); return; }
   if(b.dataset.tog){ onthoud(); const p=b.dataset.tog, v=b.dataset.v; const a=[...(getP(p)||[])]; const i=a.indexOf(v); i<0?a.push(v):a.splice(i,1);
     if(p==='bijlagen') a.sort((x,y)=>LST.BIJLAGEN.indexOf(x)-LST.BIJLAGEN.indexOf(y)); setP(p,a); changed(true); return; }
   const act=b.dataset.act; if(!act) return;
   const ond = b.dataset.o ? S.onderdelen[b.dataset.o] : (UI.tab.startsWith('o:') ? S.onderdelen[UI.tab.slice(2)] : null);
   if(act==='klap'){ if(e.target.closest('.ctl')) return; UI.open = UI.open===b.dataset.id ? null : b.dataset.id; renderForm(); return; }
-  if(act==='zin'){ const s=LST.ZINNEN[b.dataset.o][+b.dataset.i]; onthoud(); const it=leegItem({titel:s[0], tekst:s[1], op:s[2], gv:s[3]}); ond.items.push(it); UI.open=it.id; changed(true); setStatus('Constatering toegevoegd: pas gerust aan'); return; }
+  if(act==='zin'){ const s=LST.ZINNEN[b.dataset.o][+b.dataset.i]; onthoud(); const it=leegItem({titel:s[0], tekst:s[1], op:s[2], gv:s[3], standaard:s[5]||''}); ond.items.push(it); UI.open=it.id; changed(true); setStatus('Constatering toegevoegd: pas gerust aan'); return; }
   if(act==='leeg'){ onthoud(); const it=leegItem(); ond.items.push(it); UI.open=it.id; changed(true); setTimeout(()=>document.querySelector(`#c-${it.id} input`)?.focus(),0); return; }
+  if(act==='grillig'){ grilligPopup(ond, ond.glas[+b.dataset.i]); return; }
   if(act==='glaserbij'){ onthoud(); ond.glas.push(leegGlas()); changed(true); return; }
   if(act==='alszin'){ const it=ond.items[+b.dataset.i]; if(!it.titel||!it.tekst){ setStatus('Vul eerst een titel en constatering in'); return; }
-    (LST.ZINNEN[b.dataset.o] ||= []).push([it.titel, it.tekst, it.op||'nee', it.gv||'geen']); bewaarLijsten(); renderForm(); setStatus('Bewaard bij de standaardzinnen'); return; }
+    (LST.ZINNEN[b.dataset.o] ||= []).push([it.titel, it.tekst, it.op||'nee', it.gv||'geen', false, it.standaard||'']); bewaarLijsten(); renderForm(); setStatus('Bewaard bij de standaardzinnen'); return; }
   if(act==='op'||act==='neer'||act==='verberg'){
     const l=b.dataset.l, i=+b.dataset.i;
     if(l.startsWith('zin:')){ const a=LST.ZINNEN[l.slice(4)]; if(act==='verberg') a[i][4]=!a[i][4]; else { const j=act==='op'?i-1:i+1; [a[i],a[j]]=[a[j],a[i]]; } bewaarLijsten(); renderForm(); return; }
@@ -531,13 +544,42 @@ form.addEventListener('click', e=>{
     else { const j=act==='op'?i-1:i+1; [a[i],a[j]]=[a[j],a[i]]; }
     changed(true); return; }
   if(act==='fotoweg'){ onthoud(); setP(b.dataset.p, ''); changed(true); return; }
-  if(act==='zinerbij'){ (LST.ZINNEN[b.dataset.o] ||= []).push(['', '', 'nee', 'geen']); bewaarLijsten(); renderForm(); return; }
+  if(act==='zinerbij'){ (LST.ZINNEN[b.dataset.o] ||= []).push(['', '', 'nee', 'geen', false, '']); bewaarLijsten(); renderForm(); return; }
   if(act==='lijstenterug'){ LST=clone(DEFAULT_LIJSTEN); bewaarLijsten(); changed(true); setStatus('Startlijsten teruggezet'); return; }
   if(act==='nieuwja'||act==='voorbeeld'){ onthoud(); S = act==='voorbeeld' ? voorbeeldRapport() : nieuwRapport(); fileHandle=null; UI.nieuw=false; UI.open=null; UI.tab='project'; changed(true); setStatus(act==='voorbeeld'?'Voorbeeld geladen':'Nieuw rapport'); return; }
   if(act==='nieuwnee'){ UI.nieuw=false; renderForm(); return; }
   if(act==='opslaan'){ saveJson(); return; }
   if(act==='pdf'){ maakPdf(); return; }
 });
+/* pop-up bij grillige beglazing: wat is geconstateerd en waar zijn we standaard van uitgegaan */
+function grilligPopup(od, g){
+  document.querySelector('.modal')?.remove();
+  const bestaand = od.items.find(x=>x.glasId===g.id);
+  const naam = [g.soort, g.ruimte].filter(Boolean).join(', ') || 'beglazing';
+  const m = toEl(`<div class="modal"><div class="modal-in" role="dialog" aria-modal="true" aria-labelledby="gp-t">
+    <div class="sec-title" id="gp-t">Grillige beglazing: ${esc(naam)}</div>
+    <p class="hint">Dit komt als constatering in het rapport, onder de tabel met beglazing.</p>
+    <label class="f"><span>Wat hebben we geconstateerd?</span><textarea id="gp-c" rows="3" placeholder="Bijv. De beglazing is op enkele plekken vervangen door nieuwere beglazing.">${esc(bestaand?bestaand.tekst:'')}</textarea></label>
+    <label class="f"><span>Waar zijn we standaard van uitgegaan?</span><textarea id="gp-s" rows="3" placeholder="Bijv. Wij zijn voor alle woningen uitgegaan van de oorspronkelijke HR++-beglazing.">${esc(bestaand?bestaand.standaard:'')}</textarea></label>
+    <div class="acts"><button type="button" class="btn" id="gp-nee">Annuleren</button><button type="button" class="btn solid" id="gp-ja">Opslaan</button></div></div></div>`);
+  document.body.appendChild(m);
+  const sluit = () => { m.remove(); document.removeEventListener('keydown', esc_); };
+  const annuleer = () => { sluit(); if(!bestaand){ g.grillig=''; changed(true); setStatus('Grillig niet gewijzigd'); } };
+  const esc_ = e => { if(e.key==='Escape') annuleer(); };
+  document.addEventListener('keydown', esc_);
+  m.querySelector('#gp-nee').onclick = annuleer;
+  m.querySelector('#gp-ja').onclick = () => {
+    const tekst=m.querySelector('#gp-c').value.trim(), standaard=m.querySelector('#gp-s').value.trim();
+    if(!tekst || !standaard){ const leeg=m.querySelector(tekst?'#gp-s':'#gp-c'); leeg.focus(); leeg.style.borderColor='var(--bad)'; return; }
+    let it=bestaand;
+    if(bestaand) onthoud(); else { it=leegItem({glasId:g.id, titel:'Grillige beglazing: '+(g.soort||naam)}); od.items.push(it); }
+    Object.assign(it, {tekst, standaard, verborgen:false}); od.afwijkend='ja'; UI.open=it.id;
+    sluit(); changed(true); setStatus('Constatering bewaard: kies nog hoeveelheden en gevolgen');
+    setTimeout(()=>document.getElementById('c-'+it.id)?.scrollIntoView({block:'nearest'}),0);
+  };
+  m.querySelectorAll('textarea').forEach(t=>t.oninput=()=>t.style.borderColor='');
+  m.querySelector('#gp-c').focus();
+}
 document.getElementById('tabs').addEventListener('click', e=>{ const b=e.target.closest('button[data-tab]'); if(b) gaNaar(b.dataset.tab); });
 function gaNaar(tab, doel){
   UI.tab=tab; store.set(STORE_KEY+'-tab', tab); if(doel && doel.startsWith('c-')) UI.open=doel.slice(2);
@@ -573,14 +615,15 @@ function readImage(file, max, type){
 const V = (val, label) => val ? esc(val) : `<span class="r-var">${esc(label)}</span>`;
 const img = (src, leeg) => src ? `<img src="${src}" alt="">` : esc(leeg);
 function constatering(it, nr, tab){
-  const op = it.op ? `<span class="st ${it.op}">${esc(LST.UITGANGSPUNT[it.op])}</span>` : `<span class="r-var">Kies het uitgangspunt</span>`;
+  const op = it.op ? `<span class="st ${it.op}">${esc(LST.UITGANGSPUNT[it.op])}</span>` : `<span class="r-var">Wel of niet opgenomen?</span>`;
   const gv = it.gv ? `<span class="st ${it.gv}">${esc(LST.GEVOLG[it.gv])}</span>` : `<span class="r-var">Kies de gevolgen</span>`;
   const f = it.fotos.filter(Boolean);
   return `<div class="cA" data-ga="${tab}|c-${it.id}">
     <div class="kop"><span class="nr">${nr}</span><span>${V(it.titel,'Titel')}</span></div>
-    <div class="rij"><div><div class="lbl">Constatering</div><div class="x">${V(it.tekst,'Beschrijf wat je hebt gezien')}</div></div>
+    <div class="rij"><div><div class="lbl">Constatering</div><div class="x">${V(it.tekst,'Beschrijf wat je hebt gezien')}</div>
+        ${it.standaard||it.glasId?`<div class="lbl" style="margin-top:2.4mm">Uitgangspunt</div><div class="x">${V(it.standaard,'Waar zijn wij standaard van uitgegaan?')}</div>`:''}</div>
       <div class="im">${img(f[0],'Foto 1')}</div><div class="im">${f[1]?img(f[1]):(f[0]?'':'Foto 2')}</div></div>
-    <div class="balk"><div><div class="lbl">Uitgangspunt</div>${op}</div><div><div class="lbl">Gevolgen voor de uitvoering</div>${gv}</div></div>
+    <div class="balk"><div><div class="lbl">Hoeveelheden</div>${op}</div><div><div class="lbl">Gevolgen voor de uitvoering</div>${gv}</div></div>
     ${it.gv==='groot' ? `<div class="note"><b>Let op:</b> ${esc(it.letop||LST.LETOP)}</div>` : ''}
   </div>`;
 }
@@ -595,7 +638,8 @@ function stukken(){
     {html:`<div class="r-kader"><div class="t">Zo leest u een constatering</div>
       <div class="r-info een" style="border-top:0;margin:0">
        <div>Constatering</div><div>Wat wij hebben gezien.</div>
-       <div>Uitgangspunt</div><div><span class="st ja">Opgenomen</span> &nbsp; <span class="st aanname">Op basis van een aanname</span> &nbsp; <span class="st nee">Niet opgenomen</span></div>
+       <div>Uitgangspunt</div><div>De standaard waarvan wij in de hoeveelheden zijn uitgegaan.</div>
+       <div>Hoeveelheden</div><div><span class="st ja">Opgenomen</span> &nbsp; <span class="st aanname">Op basis van een aanname</span> &nbsp; <span class="st nee">Niet opgenomen</span></div>
        <div style="border-bottom:0">Gevolgen uitvoering</div><div style="border-bottom:0"><span class="st geen">Geen</span> &nbsp; <span class="st klein">Kleine kans</span> &nbsp; <span class="st groot">Mogelijk, afstemmen</span></div>
       </div></div>`}
   ]});

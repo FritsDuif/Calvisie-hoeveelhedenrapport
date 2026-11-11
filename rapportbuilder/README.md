@@ -20,10 +20,14 @@ te springen. Wat nog moet worden ingevuld, staat geel in het voorbeeld en met ee
 | Keuzelijsten | Standaardzinnen per onderdeel, overige lijsten en de vaste teksten |
 | Exporteren | Controle, opslaan en PDF |
 
-**Een constatering** bestaat uit: titel, constatering, uitgangspunt (opgenomen / aanname / niet opgenomen),
+**Een constatering** bestaat uit: titel, constatering, uitgangspunt (de standaard waarvan wij zijn uitgegaan),
+hoeveelheden (opgenomen / aanname / niet opgenomen),
 gevolgen voor de uitvoering (geen / kleine kans / mogelijk) en twee foto's. Bij *mogelijk* komt de Let op-tekst
 er vanzelf onder. Klik een standaardzin aan om te beginnen en pas de tekst gerust aan, of kies *Zelf typen*.
 Met *Bewaar als standaardzin* komt een eigen zin in de keuzelijst.
+
+**Grillige beglazing:** zet je bij een glassoort *Grillig* op Ja, dan vraagt een pop-up wat is geconstateerd en
+waar standaard van is uitgegaan. Dat komt als constatering onder de tabel.
 
 **Niets verwijderen, wel verbergen:** een verborgen constatering staat niet in het rapport, maar blijft bewaard.
 **Ongedaan maken:** de knop bovenin of Ctrl+Z (buiten een tekstveld), tot 30 stappen terug.

@@ -1,7 +1,8 @@
 /* Startlijsten voor de rapportbouwer hoeveelheden.
    Alles hier is in het programma aan te passen (tabblad Keuzelijsten). Dit bestand is alleen het begin.
-   Standaardzinnen: [titel, tekst, uitgangspunt, gevolg]
-     uitgangspunt: 'ja' = opgenomen, 'aanname' = opgenomen op basis van een aanname, 'nee' = niet opgenomen
+   Standaardzinnen: [titel, constatering, hoeveelheden, gevolg, verborgen, uitgangspunt]
+     uitgangspunt: de standaard waarvan wij zijn uitgegaan (tekst, mag leeg)
+     hoeveelheden: 'ja' = opgenomen, 'aanname' = opgenomen op basis van een aanname, 'nee' = niet opgenomen
      gevolg:       'geen' = geen gevolgen, 'klein' = kleine kans, 'groot' = mogelijk gevolgen (Let op-tekst erbij) */
 window.LIJSTEN = {
   ONDERDELEN: [
@@ -36,11 +37,12 @@ window.LIJSTEN = {
 
   ZINNEN: {
     elementen: [
+      ['Bovenlichten verschillend uitgevoerd', 'Van de 10 kozijnen met deur en bovenlicht hebben er 7 een klepraam als bovenlicht en 3 een vaste ruit.', 'nee', 'klein', false, 'Wij zijn in onze hoeveelheden uitgegaan van één standaard: het kozijn met een klepraam als bovenlicht.'],
       ['Toegangspoorten niet opgenomen', 'De metalen toegangspoorten naar de achtergevels en bergingen hebben wij niet opgenomen in onze hoeveelheden.', 'nee', 'klein'],
       ['Dakramen deels vervangen', 'Enkele dakramen zijn al vervangen door nieuwe dakramen.', 'nee', 'klein']
     ],
     beglazing: [
-      ['Beglazing plaatselijk vervangen', 'De beglazing is op enkele plekken vervangen door nieuwere beglazing. Hierin is geen duidelijk patroon te herkennen.', 'nee', 'groot']
+      ['Beglazing plaatselijk vervangen', 'De beglazing is op enkele plekken vervangen door nieuwere beglazing. Hierin is geen duidelijk patroon te herkennen.', 'nee', 'groot', false, 'Wij zijn voor alle woningen uitgegaan van de oorspronkelijke beglazing uit de tabel hierboven.']
     ],
     zav: [
       ['Zonwering door bewoners', 'De door bewoners geplaatste zonwering hebben wij niet opgenomen in onze hoeveelheden.', 'nee', 'geen'],
@@ -79,9 +81,10 @@ window.LIJSTEN = {
 
   /* vaste teksten: altijd hetzelfde in elk rapport */
   VAST: {
-    over: 'In dit rapport leggen wij vast wat wij tijdens de schouw hebben geconstateerd en welke uitgangspunten wij voor de hoeveelheden hebben gehanteerd. Per constatering staat of wij het verschil wel of niet hebben opgenomen, en of het mogelijk gevolgen heeft voor de uitvoering. De hoeveelheden zelf vindt u in de bijlagen.',
+    over: 'In dit rapport leggen wij vast wat wij tijdens de schouw hebben geconstateerd en welke uitgangspunten wij voor de hoeveelheden hebben gehanteerd. Per constatering staat van welke standaard wij zijn uitgegaan, of wij het verschil wel of niet hebben opgenomen, en of het mogelijk gevolgen heeft voor de uitvoering. De hoeveelheden zelf vindt u in de bijlagen.',
     diversiteit: [
       'De gegevens die Calvisie heeft vastgelegd, zijn gebaseerd op een standaard of basispatroon dat wij binnen het complex herkennen.',
+      'Wij schouwen niet elke woning afzonderlijk. Wij stellen per woningtype een standaard vast en zetten die door naar het hele complex.',
       'Hieronder leest u welke diversiteit wij hebben aangetroffen en welke uitgangspunten wij daarbij hebben gehanteerd.',
       'Onze opdracht omvat in de basis geen warme opname naar diversiteit en grilligheid.',
       'Per constatering geven wij aan of dit mogelijk gevolgen heeft voor de uitvoering.'
