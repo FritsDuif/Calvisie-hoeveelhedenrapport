@@ -173,7 +173,7 @@ hr.sc{border:0;border-top:1px solid var(--ui-border);margin:16px 0}
 .r-var{background:#fff1b8;color:#7a5200;border-radius:.6mm;padding:0 .6mm}
 .st{display:inline-flex;align-items:center;gap:1.6mm;font-weight:600;color:#1d2a38}
 .st::before{content:"";width:2.2mm;height:2.2mm;border-radius:50%;background:var(--c,#9aa3ad);flex:none}
-.st.ja{--c:#2f8a4e}.st.aanname{--c:#d08a1a}.st.nee{--c:#8a95a3}
+.st.ja{--c:#2f8a4e}.st.standaard{--c:#2d63ad}.st.aanname{--c:#d08a1a}.st.nee{--c:#8a95a3}
 .st.geen{--c:#2f8a4e}.st.klein{--c:#d08a1a}.st.groot{--c:#c4372b}
 /* constatering (variant A): tekst met twee foto's, balk met uitgangspunt en gevolg */
 .cA{margin:0 0 5mm}
@@ -265,7 +265,7 @@ function fmtShort(d){ if(!d) return ''; const [y,m,dd]=String(d).split('-'); ret
 
 /* ---------- keuzelijsten (aan te passen in het programma) ---------- */
 const DEFAULT_LIJSTEN = clone(window.LIJSTEN);
-let LST = (()=>{ try{ const t=store.get(LIST_KEY); return t?{...clone(DEFAULT_LIJSTEN), ...JSON.parse(t)}:clone(DEFAULT_LIJSTEN); }catch(e){ return clone(DEFAULT_LIJSTEN); } })();
+let LST = (()=>{ try{ const t=store.get(LIST_KEY); if(!t) return clone(DEFAULT_LIJSTEN); const l={...clone(DEFAULT_LIJSTEN), ...JSON.parse(t)}; l.UITGANGSPUNT=clone(DEFAULT_LIJSTEN.UITGANGSPUNT); l.GEVOLG=clone(DEFAULT_LIJSTEN.GEVOLG); return l; }catch(e){ return clone(DEFAULT_LIJSTEN); } })();
 const bewaarLijsten = () => store.set(LIST_KEY, JSON.stringify(LST));
 const OND = () => LST.ONDERDELEN;
 const ondDef = id => OND().find(o=>o.id===id);
@@ -469,7 +469,8 @@ function onderdeelForm(o){
       ${fText('Titel', ip+'.titel', {ph:'Kort, bijv. Zonwering door bewoners'})}
       ${fArea('Constatering', ip+'.tekst', 3, 'Wat heb je gezien?')}
       ${fArea('Uitgangspunt: waar zijn wij standaard van uitgegaan?'+(it.glasId?'':' (mag leeg)'), ip+'.standaard', 2, 'Bijv. Wij zijn uitgegaan van het kozijn met een klepraam als bovenlicht.')}
-      <div class="lbl">In de hoeveelheden</div>${seg(ip+'.op', [['ja','Opgenomen'],['aanname','Aanname'],['nee','Niet opgenomen']])}
+      <div class="lbl">Hoe staat de afwijking in de hoeveelheden?</div>${seg(ip+'.op', [['standaard','Geteld als standaard'],['ja','Apart opgenomen'],['aanname','Aanname'],['nee','Niet opgenomen']])}
+      <p class="hint" style="margin:-6px 0 10px">${{standaard:'De afwijking zit niet apart in de hoeveelheden: alles is geteld zoals de standaard.', ja:'De afwijking is apart meegenomen in de hoeveelheden.', aanname:'De afwijking is opgenomen, maar de maten zijn geschat.', nee:'Dit onderdeel staat helemaal niet in de hoeveelheden.'}[it.op]||''}</p>
       <div class="lbl">Gevolgen voor de uitvoering</div>${seg(ip+'.gv', [['geen','Geen'],['klein','Kleine kans'],['groot','Mogelijk']])}
       ${it.gv==='groot'?fArea('Let op-tekst (leeg = standaardtekst)', ip+'.letop', 2, LST.LETOP):''}
       <div class="grid2">${fotoIn(ip+'.fotos.0','Foto 1')}${fotoIn(ip+'.fotos.1','Foto 2')}</div>
@@ -615,7 +616,7 @@ function readImage(file, max, type){
 const V = (val, label) => val ? esc(val) : `<span class="r-var">${esc(label)}</span>`;
 const img = (src, leeg) => src ? `<img src="${src}" alt="">` : esc(leeg);
 function constatering(it, nr, tab){
-  const op = it.op ? `<span class="st ${it.op}">${esc(LST.UITGANGSPUNT[it.op])}</span>` : `<span class="r-var">Wel of niet opgenomen?</span>`;
+  const op = it.op ? `<span class="st ${it.op}">${esc(LST.UITGANGSPUNT[it.op])}</span>` : `<span class="r-var">Hoe staat de afwijking in de hoeveelheden?</span>`;
   const gv = it.gv ? `<span class="st ${it.gv}">${esc(LST.GEVOLG[it.gv])}</span>` : `<span class="r-var">Kies de gevolgen</span>`;
   const f = it.fotos.filter(Boolean);
   return `<div class="cA" data-ga="${tab}|c-${it.id}">
@@ -623,7 +624,7 @@ function constatering(it, nr, tab){
     <div class="rij"><div><div class="lbl">Constatering</div><div class="x">${V(it.tekst,'Beschrijf wat je hebt gezien')}</div>
         ${it.standaard||it.glasId?`<div class="lbl" style="margin-top:2.4mm">Uitgangspunt</div><div class="x">${V(it.standaard,'Waar zijn wij standaard van uitgegaan?')}</div>`:''}</div>
       <div class="im">${img(f[0],'Foto 1')}</div><div class="im">${f[1]?img(f[1]):(f[0]?'':'Foto 2')}</div></div>
-    <div class="balk"><div><div class="lbl">Hoeveelheden</div>${op}</div><div><div class="lbl">Gevolgen voor de uitvoering</div>${gv}</div></div>
+    <div class="balk"><div><div class="lbl">De afwijking in de hoeveelheden</div>${op}</div><div><div class="lbl">Gevolgen voor de uitvoering</div>${gv}</div></div>
     ${it.gv==='groot' ? `<div class="note"><b>Let op:</b> ${esc(it.letop||LST.LETOP)}</div>` : ''}
   </div>`;
 }
@@ -639,7 +640,9 @@ function stukken(){
       <div class="r-info een" style="border-top:0;margin:0">
        <div>Constatering</div><div>Wat wij hebben gezien.</div>
        <div>Uitgangspunt</div><div>De standaard waarvan wij in de hoeveelheden zijn uitgegaan.</div>
-       <div>Hoeveelheden</div><div><span class="st ja">Opgenomen</span> &nbsp; <span class="st aanname">Op basis van een aanname</span> &nbsp; <span class="st nee">Niet opgenomen</span></div>
+       <div>In de hoeveelheden</div><div style="display:grid;gap:.6mm"><span><span class="st standaard">Geteld als de standaard</span> de afwijking zit er niet apart in</span>
+         <span><span class="st ja">Apart opgenomen</span> de afwijking is apart meegenomen</span><span><span class="st aanname">Aanname</span> opgenomen, maten geschat</span>
+         <span><span class="st nee">Niet opgenomen</span> staat niet in de hoeveelheden</span></div>
        <div style="border-bottom:0">Gevolgen uitvoering</div><div style="border-bottom:0"><span class="st geen">Geen</span> &nbsp; <span class="st klein">Kleine kans</span> &nbsp; <span class="st groot">Mogelijk, afstemmen</span></div>
       </div></div>`}
   ]});

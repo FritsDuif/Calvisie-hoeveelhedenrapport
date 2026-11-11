@@ -2,7 +2,7 @@
    Alles hier is in het programma aan te passen (tabblad Keuzelijsten). Dit bestand is alleen het begin.
    Standaardzinnen: [titel, constatering, hoeveelheden, gevolg, verborgen, uitgangspunt]
      uitgangspunt: de standaard waarvan wij zijn uitgegaan (tekst, mag leeg)
-     hoeveelheden: 'ja' = opgenomen, 'aanname' = opgenomen op basis van een aanname, 'nee' = niet opgenomen
+     hoeveelheden: 'ja' = afwijking apart opgenomen, 'standaard' = niet apart, geteld als de standaard, 'aanname' = opgenomen op basis van een aanname, 'nee' = niet opgenomen
      gevolg:       'geen' = geen gevolgen, 'klein' = kleine kans, 'groot' = mogelijk gevolgen (Let op-tekst erbij) */
 window.LIJSTEN = {
   ONDERDELEN: [
@@ -37,12 +37,12 @@ window.LIJSTEN = {
 
   ZINNEN: {
     elementen: [
-      ['Bovenlichten verschillend uitgevoerd', 'Van de 10 kozijnen met deur en bovenlicht hebben er 7 een klepraam als bovenlicht en 3 een vaste ruit.', 'nee', 'klein', false, 'Wij zijn in onze hoeveelheden uitgegaan van één standaard: het kozijn met een klepraam als bovenlicht.'],
+      ['Bovenlichten verschillend uitgevoerd', 'Van de 10 kozijnen met deur en bovenlicht hebben er 7 een klepraam als bovenlicht en 3 een vaste ruit.', 'standaard', 'klein', false, 'Wij zijn in onze hoeveelheden uitgegaan van één standaard: het kozijn met een klepraam als bovenlicht.'],
       ['Toegangspoorten niet opgenomen', 'De metalen toegangspoorten naar de achtergevels en bergingen hebben wij niet opgenomen in onze hoeveelheden.', 'nee', 'klein'],
-      ['Dakramen deels vervangen', 'Enkele dakramen zijn al vervangen door nieuwe dakramen.', 'nee', 'klein']
+      ['Dakramen deels vervangen', 'Enkele dakramen zijn al vervangen door nieuwe dakramen.', 'standaard', 'klein']
     ],
     beglazing: [
-      ['Beglazing plaatselijk vervangen', 'De beglazing is op enkele plekken vervangen door nieuwere beglazing. Hierin is geen duidelijk patroon te herkennen.', 'nee', 'groot', false, 'Wij zijn voor alle woningen uitgegaan van de oorspronkelijke beglazing uit de tabel hierboven.']
+      ['Beglazing plaatselijk vervangen', 'De beglazing is op enkele plekken vervangen door nieuwere beglazing. Hierin is geen duidelijk patroon te herkennen.', 'standaard', 'groot', false, 'Wij zijn voor alle woningen uitgegaan van de oorspronkelijke beglazing uit de tabel hierboven.']
     ],
     zav: [
       ['Zonwering door bewoners', 'De door bewoners geplaatste zonwering hebben wij niet opgenomen in onze hoeveelheden.', 'nee', 'geen'],
@@ -54,7 +54,7 @@ window.LIJSTEN = {
       ['Extra kozijn door bewoners', 'Door bewoners is een extra kozijn in de gevelopening geplaatst. Dit hebben wij niet opgenomen in onze hoeveelheden.', 'nee', 'geen']
     ],
     behandelingen: [
-      ['Berging of erfafscheiding door bewoners behandeld', 'Enkele bewoners hebben de berging en/of erfafscheiding zelf behandeld. In onze hoeveelheden hebben wij dit als onbehandeld opgenomen, omdat dit de standaard is.', 'nee', 'geen'],
+      ['Berging of erfafscheiding door bewoners behandeld', 'Enkele bewoners hebben de berging en/of erfafscheiding zelf behandeld. In onze hoeveelheden hebben wij dit als onbehandeld opgenomen, omdat dit de standaard is.', 'standaard', 'geen'],
       ['Rabatdelen berging behandeld', 'Enkele bewoners hebben de houten rabatdelen van de berging behandeld.', 'nee', 'geen']
     ],
     daken: [],
@@ -64,7 +64,8 @@ window.LIJSTEN = {
     ]
   },
 
-  UITGANGSPUNT: { ja:'Opgenomen in de hoeveelheden', aanname:'Opgenomen op basis van een aanname', nee:'Niet opgenomen in de hoeveelheden' },
+  /* hoe de afwijking in de hoeveelheden staat (vaste woorden, niet aan te passen) */
+  UITGANGSPUNT: { ja:'Afwijking apart opgenomen', standaard:'Niet apart opgenomen, geteld als de standaard', aanname:'Opgenomen op basis van een aanname', nee:'Niet opgenomen in de hoeveelheden' },
   GEVOLG: { geen:'Geen gevolgen verwacht', klein:'Kleine kans op gevolgen', groot:'Mogelijk gevolgen, afstemmen met opdrachtgever' },
   LETOP: 'Wij adviseren dit terug te koppelen aan de opdrachtgever en zo nodig aanvullend onderzoek te laten doen door de opdrachtgever of derden.',
 

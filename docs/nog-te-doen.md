@@ -35,6 +35,8 @@
   Hoeveelheden (opgenomen / aanname / niet opgenomen) en Gevolgen voor de uitvoering.
 - [x] Beglazing: bij Grillig = Ja komt een pop-up (wat geconstateerd, waar standaard van uitgegaan). Dat wordt een
   constatering onder de tabel. Terug naar Nee verbergt die constatering (blijft bewaard).
+- [x] "Opgenomen" was dubbelzinnig (de standaard of de afwijking?). Nu: *De afwijking in de hoeveelheden* met
+  Geteld als de standaard / Apart opgenomen / Aanname / Niet opgenomen.
 - [ ] Chris laat opmerkingen achter in de online versie.
 - [ ] PDF maken in de online versie nog niet getest in de Claude-app zelf.
 - Per constatering in woorden: Constatering · Uitgangspunt (opgenomen / aanname / niet opgenomen) ·

@@ -21,7 +21,7 @@ te springen. Wat nog moet worden ingevuld, staat geel in het voorbeeld en met ee
 | Exporteren | Controle, opslaan en PDF |
 
 **Een constatering** bestaat uit: titel, constatering, uitgangspunt (de standaard waarvan wij zijn uitgegaan),
-hoeveelheden (opgenomen / aanname / niet opgenomen),
+hoe de afwijking in de hoeveelheden staat (geteld als de standaard / apart opgenomen / aanname / niet opgenomen),
 gevolgen voor de uitvoering (geen / kleine kans / mogelijk) en twee foto's. Bij *mogelijk* komt de Let op-tekst
 er vanzelf onder. Klik een standaardzin aan om te beginnen en pas de tekst gerust aan, of kies *Zelf typen*.
 Met *Bewaar als standaardzin* komt een eigen zin in de keuzelijst.
